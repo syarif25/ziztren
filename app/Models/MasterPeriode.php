@@ -22,4 +22,14 @@ class MasterPeriode extends Model
     {
         return $this->hasMany(PengajuanBeasiswa::class, 'periode_id');
     }
+
+    public function getNamaPeriodeAttribute()
+    {
+        return 'Tahun ' . $this->tahun_masehi . ' - Gel. ' . $this->gelombang;
+    }
+
+    public function getIsActiveAttribute()
+    {
+        return strtolower($this->status) === 'aktif';
+    }
 }

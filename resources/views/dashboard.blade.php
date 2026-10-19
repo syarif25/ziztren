@@ -1,656 +1,387 @@
-<!doctype html>
-<html lang="en">
+@extends('layouts.app')
 
-    <head>
-        
-        <meta charset="utf-8" />
-        <title>Dashboard | Upcube - Admin & Dashboard Template</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="Premium Multipurpose Admin & Dashboard Template" name="description" />
-        <meta content="Themesdesign" name="author" />
-        <!-- App favicon -->
-        <link rel="shortcut icon" href="{{ asset("assets/images/favicon.ico") }}">
+@section('title', 'Dashboard Beasiswa')
+@section('page-title', 'Dashboard')
 
-        <!-- jquery.vectormap css -->
-        <link href="{{ asset("assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.css") }}" rel="stylesheet" type="text/css" />
+@push('styles')
+    <style>
+        .metric-card {
+            border: 1px solid #e9ebec;
+            border-radius: 6px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+            background: #fff;
+            position: relative;
+        }
+        .metric-card.border-primary-left {
+            border-left: 4px solid #0f9cf3;
+        }
+        .metric-card.border-success-left {
+            border-left: 4px solid #11c46e;
+        }
+        .metric-card.border-warning-left {
+            border-left: 4px solid #f1b44c;
+        }
+        .metric-card.border-info-left {
+            border-left: 4px solid #009688;
+        }
+        .pipeline-step {
+            border: 1px solid #e9ebec;
+            border-radius: 6px;
+            padding: 12px 16px;
+            background: #fafbfc;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .pipeline-step.active-step {
+            background: #fff;
+            border-color: #d0d5dd;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+    </style>
+@endpush
 
-        <!-- DataTables -->
-        <link href="{{ asset("assets/libs/datatables.net-bs4/css/dataTables.bootstrap4.min.css") }}" rel="stylesheet" type="text/css" />
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="javascript: void(0);">ZIZTREN</a></li>
+    <li class="breadcrumb-item active">Dashboard</li>
+@endsection
 
-        <!-- Responsive datatable examples -->
-        <link href="{{ asset("assets/libs/datatables.net-responsive-bs4/css/responsive.bootstrap4.min.css") }}" rel="stylesheet" type="text/css" />  
+@section('content')
+    {{-- Top Filter & Periode Bar --}}
+    <div class="row align-items-center mb-3">
+        <div class="col-md-7">
+            <h4 class="font-size-18 text-dark fw-bold mb-1">Pengelolaan & Penyaluran Beasiswa</h4>
+            <p class="text-muted font-size-13 mb-0">
+                Pondok Pesantren Salafiyah Syafi'iyah Sukorejo 
+            </p>
+        </div>
+        <div class="col-md-5 text-md-end mt-2 mt-md-0">
+            <form method="GET" action="{{ route('dashboard') }}" id="formFilterPeriode" class="d-inline-flex align-items-center gap-2">
+                <span class="text-muted font-size-13 text-nowrap"><i class="ri-filter-2-line me-1"></i>Periode:</span>
+                <select name="periode_id" id="filter_periode" class="form-select form-select-sm" onchange="document.getElementById('formFilterPeriode').submit();" style="min-width: 210px;">
+                    <option value="all" {{ empty($periodeId) || $periodeId === 'all' ? 'selected' : '' }}>Semua Periode Pendaftaran</option>
+                    @foreach($periodes as $p)
+                        <option value="{{ $p->id }}" {{ $periodeId == $p->id ? 'selected' : '' }}>
+                            {{ $p->nama_periode }} {{ $p->is_active ? '(Aktif)' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                @if(!empty($periodeId) && $periodeId !== 'all')
+                    <a href="{{ route('dashboard') }}" class="btn btn-sm btn-light border" title="Reset"><i class="ri-refresh-line"></i></a>
+                @endif
+            </form>
+        </div>
+    </div>
 
-        <!-- Bootstrap Css -->
-        <link href="{{ asset("assets/css/bootstrap.min.css") }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
-        <!-- Icons Css -->
-        <link href="{{ asset("assets/css/icons.min.css") }}" rel="stylesheet" type="text/css" />
-        <!-- App Css-->
-        <link href="{{ asset("assets/css/app.min.css") }}" id="app-style" rel="stylesheet" type="text/css" />
-
-    </head>
-
-    <body data-topbar="dark">
-    
-    <!-- <body data-layout="horizontal" data-topbar="dark"> -->
-
-        <!-- Begin page -->
-        <div id="layout-wrapper">
-
-            
-            <header id="page-topbar">
-                <div class="navbar-header">
-                    <div class="d-flex">
-                        <!-- LOGO -->
-                        <div class="navbar-brand-box">
-                            <a href="{{{ route('dashboard') }}}" class="logo logo-dark">
-                                <span class="logo-sm">
-                                    <span class="fw-bold text-primary" style="font-size: 20px;">Z</span>
-                                </span>
-                                <span class="logo-lg">
-                                    <span class="fw-bold text-primary" style="font-size: 22px; letter-spacing: 1px;">ZIZTREN</span>
-                                </span>
-                            </a>
-
-                            <a href="{{{ route('dashboard') }}}" class="logo logo-light">
-                                <span class="logo-sm">
-                                    <span class="fw-bold text-white" style="font-size: 20px;">Z</span>
-                                </span>
-                                <span class="logo-lg">
-                                    <span class="fw-bold text-white" style="font-size: 22px; letter-spacing: 1px;">ZIZTREN</span>
-                                </span>
-                            </a>
+    {{-- Banner Status Kuota Periode Aktif (Jika Ada) --}}
+    @if($activePeriode)
+    <div class="card mb-3 border-0 bg-light">
+        <div class="card-body p-3">
+            <div class="row align-items-center">
+                <div class="col-lg-7">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-3 flex-shrink-0">
+                            <span class="avatar-title bg-success text-white rounded">
+                                <i class="ri-calendar-check-line font-size-20"></i>
+                            </span>
                         </div>
-
-                        <button type="button" class="btn btn-sm px-3 font-size-24 header-item waves-effect" id="vertical-menu-btn">
-                            <i class="ri-menu-2-line align-middle"></i>
-                        </button>
-
-                        
-
-                        
-            
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="font-size-14 text-dark fw-bold mb-0">{{ $activePeriode->nama_periode }}</h6>
+                                <span class="badge bg-success font-size-11">Periode Pendaftaran Aktif</span>
+                            </div>
+                            <small class="text-muted">
+                                Pendaftaran: {{ \Carbon\Carbon::parse($activePeriode->tgl_buka)->format('d M Y') }} s/d {{ \Carbon\Carbon::parse($activePeriode->tgl_tutup)->format('d M Y') }}
+                            </small>
+                        </div>
                     </div>
                 </div>
-            </header>
-
-            <!-- ========== Left Sidebar Start ========== -->
-            <div class="vertical-menu">
-
-                <div data-simplebar class="h-100">
-
-                    <!-- User details -->
-                    <div class="user-profile text-center mt-3">
-                        <div class="">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->username ?? 'User') }}&background=random&color=fff" alt="" class="avatar-md rounded-circle">
-                        </div>
-                        <div class="mt-3">
-                            <h4 class="font-size-16 mb-1">{{ Auth::user()->username ?? 'User' }}</h4>
-                            <span class="text-muted"><i class="ri-record-circle-line align-middle font-size-14 text-success"></i> Online</span>
-                        </div>
+                <div class="col-lg-5 mt-2 mt-lg-0">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="font-size-12 text-muted">Pemenuhan Kuota Beasiswa:</span>
+                        <span class="font-size-12 fw-bold text-dark">{{ $kuotaTerpakai }} dari {{ $kuotaTotal }} Kuota ({{ $kuotaPersen }}%)</span>
                     </div>
-
-                    <!--- Sidemenu -->
-                    <div id="sidebar-menu">
-                        <!-- Left Menu Start -->
-                        <ul class="metismenu list-unstyled" id="side-menu">
-                            <li class="menu-title">Menu</li>
-
-                            <li>
-                                <a href="{{{ route('dashboard') }}}" class="waves-effect">
-                                    <i class="ri-dashboard-line"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="{{{ route('beasiswa.index') }}}" class="waves-effect">
-                                    <i class="ri-file-list-3-line"></i>
-                                    <span>Beasiswa</span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="ri-database-2-line"></i>
-                                    <span>Master</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                                                        <li><a href="{{ route('pengguna.index') }}">Pengguna</a></li>
-                                    <li><a href="{{ route('lembaga.index') }}">Lembaga</a></li>
-                                    <li><a href="{{ route('master-periode.index') }}">Master Periode</a></li>
-                                    <li><a href="{{ route('provinsi.index') }}">Provinsi</a></li>
-                                    <li><a href="{{ route('kota.index') }}">Kota</a></li>
-                                    <li><a href="{{ route('kecamatan.index') }}">Kecamatan</a></li>
-                                    <li><a href="{{ route('desa.index') }}">Desa/Kelurahan</a></li>
-                                    <li><a href="{{ route('santri.index') }}">Santri</a></li>
-                                </ul>
-                            </li>
-
-                        
-                            <li>
-                                <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="waves-effect text-danger">
-                                    <i class="ri-shut-down-line text-danger"></i>
-                                    <span>Logout</span>
-                                </a>
-                                <form id="logout-form" action="{{{ route('logout') }}}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
-                            </li>
-                        </ul>
+                    <div class="progress" style="height: 8px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: {{ $kuotaPersen }}%;" aria-valuenow="{{ $kuotaPersen }}" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
-                    <!-- Sidebar -->
+                    <div class="d-flex justify-content-between font-size-11 text-muted mt-1">
+                        <span>Terisi: {{ $kuotaTerpakai }} santri</span>
+                        <span>Sisa kuota: {{ $kuotaSisa }} santri</span>
+                    </div>
                 </div>
             </div>
-            <!-- Left Sidebar End -->
+        </div>
+    </div>
+    @endif
 
-            
-
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-
-                <div class="page-content">
-                    <div class="container-fluid">
-                        
-                        <!-- start page title -->
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                                    <h4 class="mb-sm-0">Dashboard</h4>
-
-                                    <div class="page-title-right">
-                                        <ol class="breadcrumb m-0">
-                                            <li class="breadcrumb-item"><a href="javascript: void(0);">Upcube</a></li>
-                                            <li class="breadcrumb-item active">Dashboard</li>
-                                        </ol>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end page title -->
-
-                        <div class="row">
-                            <div class="col-xl-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="flex-grow-1">
-                                                <p class="text-truncate font-size-14 mb-2">Total Sales</p>
-                                                <h4 class="mb-2">1452</h4>
-                                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i>9.23%</span>from previous period</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <span class="avatar-title bg-light text-primary rounded-3">
-                                                    <i class="ri-shopping-cart-2-line font-size-24"></i>  
-                                                </span>
-                                            </div>
-                                        </div>                                            
-                                    </div><!-- end cardbody -->
-                                </div><!-- end card -->
-                            </div><!-- end col -->
-                            <div class="col-xl-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="flex-grow-1">
-                                                <p class="text-truncate font-size-14 mb-2">New Orders</p>
-                                                <h4 class="mb-2">938</h4>
-                                                <p class="text-muted mb-0"><span class="text-danger fw-bold font-size-12 me-2"><i class="ri-arrow-right-down-line me-1 align-middle"></i>1.09%</span>from previous period</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <span class="avatar-title bg-light text-success rounded-3">
-                                                    <i class="mdi mdi-currency-usd font-size-24"></i>  
-                                                </span>
-                                            </div>
-                                        </div>                                              
-                                    </div><!-- end cardbody -->
-                                </div><!-- end card -->
-                            </div><!-- end col -->
-                            <div class="col-xl-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="flex-grow-1">
-                                                <p class="text-truncate font-size-14 mb-2">New Users</p>
-                                                <h4 class="mb-2">8246</h4>
-                                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i>16.2%</span>from previous period</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <span class="avatar-title bg-light text-primary rounded-3">
-                                                    <i class="ri-user-3-line font-size-24"></i>  
-                                                </span>
-                                            </div>
-                                        </div>                                              
-                                    </div><!-- end cardbody -->
-                                </div><!-- end card -->
-                            </div><!-- end col -->
-                            <div class="col-xl-3 col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="d-flex">
-                                            <div class="flex-grow-1">
-                                                <p class="text-truncate font-size-14 mb-2">Unique Visitors</p>
-                                                <h4 class="mb-2">29670</h4>
-                                                <p class="text-muted mb-0"><span class="text-success fw-bold font-size-12 me-2"><i class="ri-arrow-right-up-line me-1 align-middle"></i>11.7%</span>from previous period</p>
-                                            </div>
-                                            <div class="avatar-sm">
-                                                <span class="avatar-title bg-light text-success rounded-3">
-                                                    <i class="mdi mdi-currency-btc font-size-24"></i>  
-                                                </span>
-                                            </div>
-                                        </div>                                              
-                                    </div><!-- end cardbody -->
-                                </div><!-- end card -->
-                            </div><!-- end col -->
-                        </div><!-- end row -->
-
-                        <div class="row">
-                            <div class="col-xl-6">
-    
-                                <div class="card">
-                                    <div class="card-body pb-0">
-                                        <div class="float-end d-none d-md-inline-block">
-                                            <div class="dropdown card-header-dropdown">
-                                                <a class="text-reset dropdown-btn" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                    <span class="text-muted">Report<i class="mdi mdi-chevron-down ms-1"></i></span>
-                                                </a>
-                                                <div class="dropdown-menu dropdown-menu-end">
-                                                    <a class="dropdown-item" href="#">Export</a>
-                                                    <a class="dropdown-item" href="#">Import</a>
-                                                    <a class="dropdown-item" href="#">Download Report</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <h4 class="card-title mb-4">Email Sent</h4>
-
-                                        <div class="text-center pt-3">
-                                            <div class="row">
-                                                <div class="col-sm-4 mb-3 mb-sm-0">
-                                                    <div class="d-inline-flex">
-                                                        <h5 class="me-2">25,117</h5>
-                                                        <div class="text-success font-size-12">
-                                                            <i class="mdi mdi-menu-up font-size-14"> </i>2.2 %
-                                                        </div>
-                                                    </div>
-                                                    <p class="text-muted text-truncate mb-0">Marketplace</p>
-                                                </div><!-- end col -->
-                                                <div class="col-sm-4 mb-3 mb-sm-0">
-                                                    <div class="d-inline-flex">
-                                                        <h5 class="me-2">$34,856</h5>
-                                                        <div class="text-success font-size-12">
-                                                            <i class="mdi mdi-menu-up font-size-14"> </i>1.2 %
-                                                        </div>
-                                                    </div>
-                                                    <p class="text-muted text-truncate mb-0">Last Week</p>
-                                                </div><!-- end col -->
-                                                <div class="col-sm-4">
-                                                    <div class="d-inline-flex">
-                                                        <h5 class="me-2">$18,225</h5>
-                                                        <div class="text-success font-size-12">
-                                                            <i class="mdi mdi-menu-up font-size-14"> </i>1.7 %
-                                                        </div>
-                                                    </div>
-                                                    <p class="text-muted text-truncate mb-0">Last Month</p>
-                                                </div><!-- end col -->
-                                            </div><!-- end row -->
-                                        </div>
-                                    </div>
-                                    <div class="card-body py-0 px-2">
-                                        <div id="area_chart" class="apex-charts" dir="ltr"></div>
-                                    </div>
-                                </div><!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-xl-6">
-                                <div class="card">
-                                    <div class="card-body pb-0">
-                                        <div class="float-end d-none d-md-inline-block">
-                                            <div class="dropdown">
-                                                <a class="text-reset" href="#" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                                    <span class="text-muted">This Years<i class="mdi mdi-chevron-down ms-1"></i></span>
-                                                </a>
-                                                <div class="dropdown-menu dropdown-menu-end">
-                                                    <a class="dropdown-item" href="#">Today</a>
-                                                    <a class="dropdown-item" href="#">Last Week</a>
-                                                    <a class="dropdown-item" href="#">Last Month</a>
-                                                    <a class="dropdown-item" href="#">This Year</a>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <h4 class="card-title mb-4">Revenue</h4>
-
-                                        <div class="text-center pt-3">
-                                            <div class="row">
-                                                <div class="col-sm-4 mb-3 mb-sm-0">
-                                                    <div>
-                                                        <h5>17,493</h5>
-                                                        <p class="text-muted text-truncate mb-0">Marketplace</p>
-                                                    </div>
-                                                </div><!-- end col -->
-                                                <div class="col-sm-4 mb-3 mb-sm-0">
-                                                    <div>
-                                                        <h5>$44,960</h5>
-                                                        <p class="text-muted text-truncate mb-0">Last Week</p>
-                                                    </div>
-                                                </div><!-- end col -->
-                                                <div class="col-sm-4">
-                                                    <div>
-                                                        <h5>$29,142</h5>
-                                                        <p class="text-muted text-truncate mb-0">Last Month</p>
-                                                    </div>
-                                                </div><!-- end col -->
-                                            </div><!-- end row -->
-                                        </div>
-                                    </div>
-                                    <div class="card-body py-0 px-2">
-                                        <div id="column_line_chart" class="apex-charts" dir="ltr"></div>
-                                    </div>
-                                </div><!-- end card -->
-                            </div>
-                            <!-- end col -->
-                        </div>
-                        <!-- end row -->
-    
-                        <div class="row">
-                            <div class="col-xl-8">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="dropdown float-end">
-                                            <a href="#" class="dropdown-toggle arrow-none card-drop" data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="mdi mdi-dots-vertical"></i>
-                                            </a>
-                                            <div class="dropdown-menu dropdown-menu-end">
-                                                <!-- item-->
-                                                <a href="javascript:void(0);" class="dropdown-item">Sales Report</a>
-                                                <!-- item-->
-                                                <a href="javascript:void(0);" class="dropdown-item">Export Report</a>
-                                                <!-- item-->
-                                                <a href="javascript:void(0);" class="dropdown-item">Profit</a>
-                                                <!-- item-->
-                                                <a href="javascript:void(0);" class="dropdown-item">Action</a>
-                                            </div>
-                                        </div>
-    
-                                        <h4 class="card-title mb-4">Latest Transactions</h4>
-    
-                                        <div class="table-responsive">
-                                            <table class="table table-centered mb-0 align-middle table-hover table-nowrap">
-                                                <thead class="table-light">
-                                                    <tr>
-                                                        <th>Name</th>
-                                                        <th>Position</th>
-                                                        <th>Status</th>
-                                                        <th>Age</th>
-                                                        <th>Start date</th>
-                                                        <th style="width: 120px;">Salary</th>
-                                                    </tr>
-                                                </thead><!-- end thead -->
-                                                <tbody>
-                                                    <tr>
-                                                        <td><h6 class="mb-0">Charles Casey</h6></td>
-                                                        <td>Web Developer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>Active</div>
-                                                        </td>
-                                                        <td>
-                                                            23
-                                                        </td>
-                                                        <td>
-                                                            04 Apr, 2021
-                                                        </td>
-                                                        <td>$42,450</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                     <tr>
-                                                        <td><h6 class="mb-0">Alex Adams</h6></td>
-                                                        <td>Python Developer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-warning align-middle me-2"></i>Deactive</div>
-                                                        </td>
-                                                        <td>
-                                                            28
-                                                        </td>
-                                                        <td>
-                                                            01 Aug, 2021
-                                                        </td>
-                                                        <td>$25,060</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                     <tr>
-                                                        <td><h6 class="mb-0">Prezy Kelsey</h6></td>
-                                                        <td>Senior Javascript Developer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>Active</div>
-                                                        </td>
-                                                        <td>
-                                                            35
-                                                        </td>
-                                                        <td>
-                                                            15 Jun, 2021
-                                                        </td>
-                                                        <td>$59,350</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                     <tr>
-                                                        <td><h6 class="mb-0">Ruhi Fancher</h6></td>
-                                                        <td>React Developer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>Active</div>
-                                                        </td>
-                                                        <td>
-                                                            25
-                                                        </td>
-                                                        <td>
-                                                            01 March, 2021
-                                                        </td>
-                                                        <td>$23,700</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                     <tr>
-                                                        <td><h6 class="mb-0">Juliet Pineda</h6></td>
-                                                        <td>Senior Web Designer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>Active</div>
-                                                        </td>
-                                                        <td>
-                                                            38
-                                                        </td>
-                                                        <td>
-                                                            01 Jan, 2021
-                                                        </td>
-                                                        <td>$69,185</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                     <tr>
-                                                        <td><h6 class="mb-0">Den Simpson</h6></td>
-                                                        <td>Web Designer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-warning align-middle me-2"></i>Deactive</div>
-                                                        </td>
-                                                        <td>
-                                                            21
-                                                        </td>
-                                                        <td>
-                                                            01 Sep, 2021
-                                                        </td>
-                                                        <td>$37,845</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                     <tr>
-                                                        <td><h6 class="mb-0">Mahek Torres</h6></td>
-                                                        <td>Senior Laravel Developer</td>
-                                                        <td>
-                                                            <div class="font-size-13"><i class="ri-checkbox-blank-circle-fill font-size-10 text-success align-middle me-2"></i>Active</div>
-                                                        </td>
-                                                        <td>
-                                                            32
-                                                        </td>
-                                                        <td>
-                                                            20 May, 2021
-                                                        </td>
-                                                        <td>$55,100</td>
-                                                    </tr>
-                                                     <!-- end -->
-                                                </tbody><!-- end tbody -->
-                                            </table> <!-- end table -->
-                                        </div>
-                                    </div><!-- end card -->
-                                </div><!-- end card -->
-                            </div>
-                            <!-- end col -->
-                            <div class="col-xl-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <div class="float-end">
-                                            <select class="form-select shadow-none form-select-sm">
-                                                <option selected>Apr</option>
-                                                <option value="1">Mar</option>
-                                                <option value="2">Feb</option>
-                                                <option value="3">Jan</option>
-                                            </select>
-                                        </div>
-                                        <h4 class="card-title mb-4">Monthly Earnings</h4>
-                                        
-                                        <div class="row">
-                                            <div class="col-4">
-                                                <div class="text-center mt-4">
-                                                    <h5>3475</h5>
-                                                    <p class="mb-2 text-truncate">Market Place</p>
-                                                </div>
-                                            </div>
-                                            <!-- end col -->
-                                            <div class="col-4">
-                                                <div class="text-center mt-4">
-                                                    <h5>458</h5>
-                                                    <p class="mb-2 text-truncate">Last Week</p>
-                                                </div>
-                                            </div>
-                                            <!-- end col -->
-                                            <div class="col-4">
-                                                <div class="text-center mt-4">
-                                                    <h5>9062</h5>
-                                                    <p class="mb-2 text-truncate">Last Month</p>
-                                                </div>
-                                            </div>
-                                            <!-- end col -->
-                                        </div>
-                                        <!-- end row -->
-
-                                        <div class="mt-4">
-                                            <div id="donut-chart" class="apex-charts"></div>
-                                        </div>
-                                    </div>
-                                </div><!-- end card -->
-                            </div><!-- end col -->
-                        </div>
-                        <!-- end row -->
-                    </div>
+    {{-- Row 1: Executive KPI Cards --}}
+    <div class="row g-3 mb-3">
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-primary-left h-100 mb-0">
+                <div class="card-body p-3">
+                    <div class="text-muted text-uppercase font-size-12 fw-semibold">Total Pengajuan</div>
+                    <h3 class="fw-bold text-dark my-2">{{ number_format($totalPengajuan, 0, ',', '.') }}</h3>
+                   
+                </div>
+            </div>
+        </div>
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-warning-left h-100 mb-0">
+                <div class="card-body p-3">
+                    <div class="text-muted text-uppercase font-size-12 fw-semibold">Total Usulan Dana</div>
+                    <h3 class="fw-bold text-dark my-2">Rp {{ number_format($totalDanaUsulan, 0, ',', '.') }}</h3>
                     
                 </div>
-                <!-- End Page-content -->
-               
-                <footer class="footer">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <script>document.write(new Date().getFullYear())</script> © Upcube.
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="text-sm-end d-none d-sm-block">
-                                    Crafted with <i class="mdi mdi-heart text-danger"></i> by Themesdesign
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </footer>
-                
             </div>
-            <!-- end main content-->
-
         </div>
-        <!-- END layout-wrapper -->
-
-        <!-- Right Sidebar -->
-        <div class="right-bar">
-            <div data-simplebar class="h-100">
-                <div class="rightbar-title d-flex align-items-center px-3 py-4">
-            
-                    <h5 class="m-0 me-2">Settings</h5>
-
-                    <a href="javascript:void(0);" class="right-bar-toggle ms-auto">
-                        <i class="mdi mdi-close noti-icon"></i>
-                    </a>
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-info-left h-100 mb-0">
+                <div class="card-body p-3">
+                    <div class="text-muted text-uppercase font-size-12 fw-semibold">Disetujui (ACC Bendahara)</div>
+                    <h3 class="fw-bold text-dark my-2">Rp {{ number_format($totalDanaAcc, 0, ',', '.') }}</h3>
+                    <div class="d-flex justify-content-between align-items-center font-size-12 text-muted">
+                        <span>Berkas disetujui:</span>
+                        <span class="fw-semibold text-primary">{{ $countAcc + $countPencairan }} berkas</span>
+                    </div>
                 </div>
-
-                <!-- Settings -->
-                <hr class="mt-0" />
-                <h6 class="text-center mb-0">Choose Layouts</h6>
-
-                <div class="p-4">
-                    <div class="mb-2">
-                        <img src="{{ asset("assets/images/layouts/layout-1.jpg") }}" class="img-fluid img-thumbnail" alt="layout-1">
-                    </div>
-
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input theme-choice" type="checkbox" id="light-mode-switch" checked>
-                        <label class="form-check-label" for="light-mode-switch">Light Mode</label>
-                    </div>
-    
-                    <div class="mb-2">
-                        <img src="{{ asset("assets/images/layouts/layout-2.jpg") }}" class="img-fluid img-thumbnail" alt="layout-2">
-                    </div>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input theme-choice" type="checkbox" id="dark-mode-switch" data-bsStyle="assets/css/bootstrap-dark.min.css" data-appStyle="assets/css/app-dark.min.css">
-                        <label class="form-check-label" for="dark-mode-switch">Dark Mode</label>
-                    </div>
-    
-                    <div class="mb-2">
-                        <img src="{{ asset("assets/images/layouts/layout-3.jpg") }}" class="img-fluid img-thumbnail" alt="layout-3">
-                    </div>
-                    <div class="form-check form-switch mb-5">
-                        <input class="form-check-input theme-choice" type="checkbox" id="rtl-mode-switch" data-appStyle="assets/css/app-rtl.min.css">
-                        <label class="form-check-label" for="rtl-mode-switch">RTL Mode</label>
-                    </div>
-
-            
-                </div>
-
-            </div> <!-- end slimscroll-menu-->
+            </div>
         </div>
-        <!-- /Right-bar -->
+        <div class="col-xl-3 col-md-6">
+            <div class="card metric-card border-success-left h-100 mb-0">
+                <div class="card-body p-3">
+                    <div class="text-muted text-uppercase font-size-12 fw-semibold">Telah Dicairkan</div>
+                    <h3 class="fw-bold text-success my-2">Rp {{ number_format($totalDanaCair, 0, ',', '.') }}</h3>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Right bar overlay-->
-        <div class="rightbar-overlay"></div>
+    {{-- Row 2: Pipeline Alur Status Berkas --}}
+    <div class="card mb-3">
+        <div class="card-header bg-transparent py-2 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="fw-bold text-dark font-size-13"><i class="ri-flow-chart me-1 text-primary"></i> Pipeline Status Berkas Pengajuan</span>
+                <a href="{{ route('beasiswa.index') }}" class="font-size-12 text-primary">Lihat Seluruh Berkas &rarr;</a>
+            </div>
+        </div>
+        <div class="card-body p-3">
+            <div class="row g-2">
+                <div class="col-lg-3 col-6">
+                    <div class="pipeline-step">
+                        <div>
+                            <span class="text-muted font-size-12 d-block">1. Draft Berkas</span>
+                            <span class="fw-bold font-size-18 text-secondary">{{ $countDraft }}</span>
+                            <small class="text-muted d-block font-size-11">Belum diajukan</small>
+                        </div>
+                        <span class="badge bg-secondary font-size-11">{{ $totalPengajuan > 0 ? round(($countDraft / $totalPengajuan) * 100) : 0 }}%</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="pipeline-step {{ $countProses > 0 ? 'active-step border-warning' : '' }}">
+                        <div>
+                            <span class="text-muted font-size-12 d-block">2. Verifikasi Berkas</span>
+                            <span class="fw-bold font-size-18 text-warning">{{ $countProses }}</span>
+                            <small class="text-warning d-block font-size-11 fw-medium">Menunggu telaah</small>
+                        </div>
+                        <span class="badge bg-warning font-size-11">{{ $totalPengajuan > 0 ? round(($countProses / $totalPengajuan) * 100) : 0 }}%</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="pipeline-step">
+                        <div>
+                            <span class="text-muted font-size-12 d-block">3. Disetujui (ACC)</span>
+                            <span class="fw-bold font-size-18 text-primary">{{ $countAcc }}</span>
+                            <small class="text-muted d-block font-size-11">Siap disalurkan</small>
+                        </div>
+                        <span class="badge bg-primary font-size-11">{{ $totalPengajuan > 0 ? round(($countAcc / $totalPengajuan) * 100) : 0 }}%</span>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-6">
+                    <div class="pipeline-step">
+                        <div>
+                            <span class="text-muted font-size-12 d-block">4. Selesai Pencairan</span>
+                            <span class="fw-bold font-size-18 text-success">{{ $countPencairan }}</span>
+                            <small class="text-muted d-block font-size-11">Telah diterima</small>
+                        </div>
+                        <span class="badge bg-success font-size-11">{{ $totalPengajuan > 0 ? round(($countPencairan / $totalPengajuan) * 100) : 0 }}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- JAVASCRIPT -->
-        <script src="{{ asset("assets/libs/jquery/jquery.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/bootstrap/js/bootstrap.bundle.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/metismenu/metisMenu.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/simplebar/simplebar.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/node-waves/waves.min.js") }}"></script>
+    {{-- Row 3: Dua Kolom Finansial & Distribusi Lembaga --}}
+    <div class="row g-3 mb-3">
+        {{-- Kolom Kiri: Rekapitulasi Alokasi Dana per Komponen --}}
+        <div class="col-xl-6">
+            <div class="card h-100 mb-0">
+                <div class="card-header bg-transparent py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark font-size-13"><i class="ri-money-cny-box-line me-1 text-success"></i> Alokasi Komponen Pembiayaan</span>
+                    <span class="font-size-12 text-muted">Total: <strong class="text-dark">Rp {{ number_format($totalDanaUsulan, 0, ',', '.') }}</strong></span>
+                </div>
+                <div class="card-body p-3">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless align-middle mb-0">
+                            <tbody>
+                                @foreach($komponenList as $k)
+                                <tr>
+                                    <td style="width: 40%;" class="ps-0 py-2">
+                                        <div class="d-flex align-items-center">
+                                            <span style="display:inline-block; width: 10px; height: 10px; border-radius: 2px; background: {{ $k['color'] }}; margin-right: 8px;"></span>
+                                            <span class="font-size-13 text-dark fw-medium">{{ $k['nama'] }}</span>
+                                        </div>
+                                    </td>
+                                    <td style="width: 35%;" class="py-2">
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar" role="progressbar" style="width: {{ $k['persen'] }}%; background-color: {{ $k['color'] }};"></div>
+                                        </div>
+                                    </td>
+                                    <td style="width: 25%;" class="text-end pe-0 py-2">
+                                        <span class="fw-bold font-size-12 text-dark">Rp {{ number_format($k['nominal'], 0, ',', '.') }}</span>
+                                        <small class="text-muted d-block font-size-11">{{ $k['persen'] }}%</small>
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        
-        <!-- apexcharts -->
-        <script src="{{ asset("assets/libs/apexcharts/apexcharts.min.js") }}"></script>
+        {{-- Kolom Kanan: Distribusi Tingkat Lembaga / Madrasah Santri --}}
+        <div class="col-xl-6">
+            <div class="card h-100 mb-0">
+                <div class="card-header bg-transparent py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark font-size-13"><i class="ri-building-4-line me-1 text-info"></i> Sebaran Lembaga / Madrasah</span>
+                    <a href="{{ route('laporan.index') }}" class="font-size-12 text-primary">Rekap Lengkap &rarr;</a>
+                </div>
+                <div class="card-body p-3">
+                    @if($lembagaStats->count() > 0)
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover align-middle mb-0">
+                                <thead class="table-light font-size-12">
+                                    <tr>
+                                        <th>Nama Lembaga / Madrasah</th>
+                                        <th class="text-center">Jumlah Santri</th>
+                                        <th class="text-end">Alokasi Bantuan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($lembagaStats as $l)
+                                    <tr>
+                                        <td class="font-size-13 fw-medium text-dark">
+                                            <i class="ri-graduation-cap-line text-muted me-1"></i> {{ $l->nama_lembaga }}
+                                        </td>
+                                        <td class="text-center font-size-13 fw-semibold">
+                                            {{ $l->total_santri }} Santri
+                                        </td>
+                                        <td class="text-end font-size-13 fw-bold text-success">
+                                            Rp {{ number_format($l->total_nominal, 0, ',', '.') }}
+                                        </td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="text-center py-4 text-muted font-size-13">
+                            <i class="ri-file-search-line font-size-24 d-block mb-1"></i>
+                            Belum ada pengajuan dengan lembaga yang terdata pada filter ini.
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
 
-        <!-- jquery.vectormap map -->
-        <script src="{{ asset("assets/libs/admin-resources/jquery.vectormap/jquery-jvectormap-1.2.2.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/admin-resources/jquery.vectormap/maps/jquery-jvectormap-us-merc-en.js") }}"></script>
-
-        <!-- Required datatable js -->
-        <script src="{{ asset("assets/libs/datatables.net/js/jquery.dataTables.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/datatables.net-bs4/js/dataTables.bootstrap4.min.js") }}"></script>
-        
-        <!-- Responsive examples -->
-        <script src="{{ asset("assets/libs/datatables.net-responsive/js/dataTables.responsive.min.js") }}"></script>
-        <script src="{{ asset("assets/libs/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js") }}"></script>
-
-        <script src="{{ asset("assets/js/pages/dashboard.init.js") }}"></script>
-
-        <!-- App js -->
-        <script src="{{ asset("assets/js/app.js") }}"></script>
-    </body>
-
-</html>
+    {{-- Row 4: Antrean Verifikasi & Pengajuan Beasiswa Terkini --}}
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="card mb-0">
+                <div class="card-header bg-transparent py-2 border-bottom d-flex justify-content-between align-items-center">
+                    <div>
+                        <span class="fw-bold text-dark font-size-13"><i class="ri-history-line me-1 text-primary"></i> Data Pengajuan Beasiswa Terkini</span>
+                        <span class="text-muted font-size-12 ms-2">(Menampilkan {{ $pengajuanTerbaru->count() }} pengajuan terakhir)</span>
+                    </div>
+                    <div class="d-flex gap-2">
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered table-centered align-middle mb-0 font-size-13">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;" class="text-center">No</th>
+                                    <th>NIS</th>
+                                    <th>Nama Santri</th>
+                                    <th>Lembaga / Tingkat</th>
+                                    <th>Periode</th>
+                                    <th class="text-end">Nominal Bantuan</th>
+                                    <th class="text-center">Status</th>
+                                    <th class="text-center" style="width: 100px;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($pengajuanTerbaru as $index => $item)
+                                    @php
+                                        $nominal = ($item->jumlah_utap ?? 0) + ($item->spp_gasal ?? 0) + ($item->spp_genap ?? 0) + ($item->living_cost ?? 0) + ($item->biaya_lain ?? 0);
+                                        $st = strtolower($item->status_pengajuan ?? 'draft');
+                                        $badgeCls = match($st) {
+                                            'draft'     => 'bg-secondary',
+                                            'proses'    => 'bg-warning text-dark',
+                                            'acc'       => 'bg-primary',
+                                            'pencairan' => 'bg-success',
+                                            'ditolak'   => 'bg-danger',
+                                            default     => 'bg-secondary'
+                                        };
+                                        $statusLabel = match($st) {
+                                            'draft'     => 'Draft',
+                                            'proses'    => 'Verifikasi',
+                                            'acc'       => 'Disetujui (ACC)',
+                                            'pencairan' => 'Pencairan',
+                                            'ditolak'   => 'Ditolak',
+                                            default     => ucfirst($st)
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <td class="text-center text-muted">{{ $index + 1 }}</td>
+                                        <td class="fw-semibold">{{ $item->nis }}</td>
+                                        <td>
+                                            <span class="fw-bold text-dark">{{ $item->santri?->nama_lengkap ?? '-' }}</span>
+                                            @if($item->santri?->asrama)
+                                                <small class="text-muted d-block">{{ $item->santri->asrama }} {{ $item->santri->kamar ? '/ Kamar ' . $item->santri->kamar : '' }}</small>
+                                            @endif
+                                        </td>
+                                        <td>{{ $item->lembaga1?->nama_lembaga ?? '-' }}</td>
+                                        <td>
+                                            <span class="badge bg-light text-muted border">{{ $item->periode?->nama_periode ?? '-' }}</span>
+                                        </td>
+                                        <td class="text-end fw-bold text-dark">
+                                            Rp {{ number_format($nominal, 0, ',', '.') }}
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge {{ $badgeCls }} font-size-11 px-2 py-1">{{ $statusLabel }}</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <a href="{{ route('beasiswa.show', $item->id) }}" class="btn btn-sm btn-outline-primary py-0 px-2 font-size-11" title="Buka Detail">
+                                                <i class="ri-eye-line me-1"></i>Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="8" class="text-center py-4 text-muted">
+                                            Belum ada pengajuan beasiswa terdaftar.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection

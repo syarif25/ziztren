@@ -13,9 +13,7 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('pengguna/data', [UserController::class, 'data'])->name('pengguna.data');
     Route::resource('pengguna', UserController::class);
@@ -47,6 +45,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/beasiswa/create', [App\Http\Controllers\BeasiswaController::class, 'create'])->name('beasiswa.create');
     Route::post('/beasiswa', [App\Http\Controllers\BeasiswaController::class, 'store'])->name('beasiswa.store');
     Route::get('/beasiswa/{id}/edit', [App\Http\Controllers\BeasiswaController::class, 'edit'])->name('beasiswa.edit');
+    Route::get('/beasiswa/{id}/pdf', [App\Http\Controllers\BeasiswaController::class, 'cetakPdf'])->name('beasiswa.pdf');
     Route::put('/beasiswa/{id}', [App\Http\Controllers\BeasiswaController::class, 'update'])->name('beasiswa.update');
     Route::get('/beasiswa/search-santri', [App\Http\Controllers\BeasiswaController::class, 'searchSantri'])->name('beasiswa.search-santri');
     Route::get('/beasiswa/santri/{nis}', [App\Http\Controllers\BeasiswaController::class, 'getSantriDetail']);
@@ -55,10 +54,21 @@ Route::middleware('auth')->group(function () {
     Route::get('beasiswa/{id}/dokumen', [App\Http\Controllers\BeasiswaController::class, 'getDokumen'])->name('beasiswa.dokumen.list');
     Route::post('beasiswa/{id}/dokumen', [App\Http\Controllers\BeasiswaController::class, 'uploadDokumen'])->name('beasiswa.dokumen.upload');
     Route::get('berkas-lampiran/{id}', [App\Http\Controllers\BeasiswaController::class, 'lihatDokumen'])->name('dokumen.lihat');
+    Route::get('/beasiswa/{id}', [App\Http\Controllers\BeasiswaController::class, 'show'])->name('beasiswa.show');
     
     // Status & Histori
     Route::get('beasiswa/{id}/histori-status', [App\Http\Controllers\BeasiswaController::class, 'getHistoriStatus'])->name('beasiswa.histori');
     Route::post('beasiswa/{id}/status', [App\Http\Controllers\BeasiswaController::class, 'updateStatus'])->name('beasiswa.status.update');
+
+    Route::get('histori-status/data', [App\Http\Controllers\HistoriStatusController::class, 'data'])->name('histori-status.data');
+    Route::resource('histori-status', App\Http\Controllers\HistoriStatusController::class)->except(['create', 'store', 'show']);
+
+    // Laporan & Rekapitulasi
+    Route::get('/laporan', [App\Http\Controllers\LaporanController::class, 'index'])->name('laporan.index');
+    Route::get('/laporan/data', [App\Http\Controllers\LaporanController::class, 'data'])->name('laporan.data');
+    Route::get('/laporan/summary', [App\Http\Controllers\LaporanController::class, 'summary'])->name('laporan.summary');
+    Route::get('/laporan/export-excel', [App\Http\Controllers\LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
+    Route::get('/laporan/cetak-pdf', [App\Http\Controllers\LaporanController::class, 'cetakPdf'])->name('laporan.cetak.pdf');
 
     // Region APIs
     Route::get('/api/regions/provinsi', [App\Http\Controllers\RegionController::class, 'getProvinsi']);

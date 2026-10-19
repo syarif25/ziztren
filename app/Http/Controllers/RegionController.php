@@ -18,19 +18,25 @@ class RegionController extends Controller
 
     public function getKota($provinsi_id)
     {
-        $kota = City::where('province_id', $provinsi_id)->orderBy('name', 'asc')->get();
+        $province = Province::find($provinsi_id);
+        $code = $province ? $province->code : $provinsi_id;
+        $kota = City::where('province_code', $code)->orderBy('name', 'asc')->get();
         return response()->json($kota);
     }
 
     public function getKecamatan($kota_id)
     {
-        $kecamatan = District::where('city_id', $kota_id)->orderBy('name', 'asc')->get();
+        $city = City::find($kota_id);
+        $code = $city ? $city->code : $kota_id;
+        $kecamatan = District::where('city_code', $code)->orderBy('name', 'asc')->get();
         return response()->json($kecamatan);
     }
 
     public function getDesa($kecamatan_id)
     {
-        $desa = Village::where('district_id', $kecamatan_id)->orderBy('name', 'asc')->get();
+        $district = District::find($kecamatan_id);
+        $code = $district ? $district->code : $kecamatan_id;
+        $desa = Village::where('district_code', $code)->orderBy('name', 'asc')->get();
         return response()->json($desa);
     }
 }

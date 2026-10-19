@@ -1,25 +1,9 @@
-<!doctype html>
-<html lang="en">
+@extends('layouts.app')
 
-    <head>
-        
-        <meta charset="utf-8" />
-        <title>Tambah Pengajuan Beasiswa | ZIZTREN</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="ZIZTREN Scholarship Management" name="description" />
-        <!-- App favicon -->
-        <link rel="shortcut icon" href="{{ asset("assets/images/favicon.ico") }}">
+@section('title', 'Edit Pengajuan Beasiswa')
 
-        <!-- Bootstrap Css -->
-        <link href="{{ asset("assets/css/bootstrap.min.css") }}" id="bootstrap-style" rel="stylesheet" type="text/css" />
-        <!-- Icons Css -->
-        <link href="{{ asset("assets/css/icons.min.css") }}" rel="stylesheet" type="text/css" />
-        <!-- App Css-->
-        <link href="{{ asset("assets/css/app.min.css") }}" id="app-style" rel="stylesheet" type="text/css" />
-        <!-- Select2 CSS -->
-        <link href="{{ asset("assets/libs/select2/css/select2.min.css") }}" rel="stylesheet" type="text/css" />
-
-    
+@push('styles')
+    <link href="{{ asset("assets/libs/select2/css/select2.min.css") }}" rel="stylesheet" type="text/css" />
     <style>
         .wizard-progress {
             display: flex;
@@ -81,141 +65,17 @@
              /* We'll handle line color dynamically via JS or just keep it simple */
         }
     </style>
+@endpush
 
-</head>
+@section('page-title', 'Edit Pengajuan Beasiswa')
 
-    <body data-topbar="dark">
+@section('breadcrumb')
+    <li class="breadcrumb-item"><a href="{{ route('beasiswa.index') }}">Beasiswa</a></li>
+    <li class="breadcrumb-item active">Edit Pengajuan Beasiswa</li>
+@endsection
 
-        <!-- Begin page -->
-        <div id="layout-wrapper">
-
-            
-            <header id="page-topbar">
-                <div class="navbar-header">
-                    <div class="d-flex">
-                        <!-- LOGO -->
-                        <div class="navbar-brand-box">
-                            <a href="{{{ route('dashboard') }}}" class="logo logo-dark">
-                                <span class="logo-sm">
-                                    <span class="fw-bold text-primary" style="font-size: 20px;">Z</span>
-                                </span>
-                                <span class="logo-lg">
-                                    <span class="fw-bold text-primary" style="font-size: 22px; letter-spacing: 1px;">ZIZTREN</span>
-                                </span>
-                            </a>
-
-                            <a href="{{{ route('dashboard') }}}" class="logo logo-light">
-                                <span class="logo-sm">
-                                    <span class="fw-bold text-white" style="font-size: 20px;">Z</span>
-                                </span>
-                                <span class="logo-lg">
-                                    <span class="fw-bold text-white" style="font-size: 22px; letter-spacing: 1px;">ZIZTREN</span>
-                                </span>
-                            </a>
-                        </div>
-
-                        <button type="button" class="btn btn-sm px-3 font-size-24 header-item waves-effect" id="vertical-menu-btn">
-                            <i class="ri-menu-2-line align-middle"></i>
-                        </button>
-
-                    </div>
-                </div>
-            </header>
-
-            <!-- ========== Left Sidebar Start ========== -->
-            <div class="vertical-menu">
-
-                <div data-simplebar class="h-100">
-
-                    <!-- User details -->
-                    <div class="user-profile text-center mt-3">
-                        <div class="">
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->username ?? 'User') }}&background=random&color=fff" alt="" class="avatar-md rounded-circle">
-                        </div>
-                        <div class="mt-3">
-                            <h4 class="font-size-16 mb-1">{{ Auth::user()->username ?? 'User' }}</h4>
-                            <span class="text-muted"><i class="ri-record-circle-line align-middle font-size-14 text-success"></i> Online</span>
-                        </div>
-                    </div>
-
-                    <!--- Sidemenu -->
-                    <div id="sidebar-menu">
-                        <!-- Left Menu Start -->
-                        <ul class="metismenu list-unstyled" id="side-menu">
-                            <li class="menu-title">Menu</li>
-
-                            <li>
-                                <a href="{{{ route('dashboard') }}}" class="waves-effect">
-                                    <i class="ri-dashboard-line"></i>
-                                    <span>Dashboard</span>
-                                </a>
-                            </li>
-
-                            <li class="mm-active">
-                                <a href="{{{ route('beasiswa.index') }}}" class="waves-effect">
-                                    <i class="ri-file-list-3-line"></i>
-                                    <span>Beasiswa</span>
-                                </a>
-                            </li>
-
-                            <li>
-                                <a href="javascript: void(0);" class="has-arrow waves-effect">
-                                    <i class="ri-database-2-line"></i>
-                                    <span>Master</span>
-                                </a>
-                                <ul class="sub-menu" aria-expanded="false">
-                                    <li><a href="{{ route('pengguna.index') }}">Pengguna</a></li>
-                                    <li><a href="{{ route('lembaga.index') }}">Lembaga</a></li>
-                                    <li><a href="{{ route('master-periode.index') }}">Master Periode</a></li>
-                                    <li><a href="{{ route('provinsi.index') }}">Provinsi</a></li>
-                                    <li><a href="{{ route('kota.index') }}">Kota</a></li>
-                                    <li><a href="{{ route('kecamatan.index') }}">Kecamatan</a></li>
-                                    <li><a href="{{ route('desa.index') }}">Desa/Kelurahan</a></li>
-                                    <li><a href="{{ route('santri.index') }}">Santri</a></li>
-                                </ul>
-                            </li>
-
-                            <li>
-                                <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="waves-effect text-danger">
-                                    <i class="ri-shut-down-line text-danger"></i>
-                                    <span>Logout</span>
-                                </a>
-                                <form id="logout-form" action="{{{ route('logout') }}}" method="POST" class="d-none">
-                                    @csrf
-                                </form>
-                            </li>
-                        </ul>
-                    </div>
-                    <!-- Sidebar -->
-                </div>
-            </div>
-            <!-- Left Sidebar End -->
-
-            <!-- ============================================================== -->
-            <!-- Start right Content here -->
-            <!-- ============================================================== -->
-            <div class="main-content">
-
-                <div class="page-content">
-                    <div class="container-fluid">
-                        
-                        <!-- start page title -->
-                        <div class="row">
-                                <div class="page-title-box d-sm-flex align-items-center justify-content-between">
-                                    <h4 class="mb-sm-0">Edit Pengajuan Beasiswa</h4>
-
-                                    <div class="page-title-right">
-                                        <ol class="breadcrumb m-0">
-                                            <li class="breadcrumb-item"><a href="{{ route('beasiswa.index') }}">Beasiswa</a></li>
-                                            <li class="breadcrumb-item active">Edit Pengajuan</li>
-                                        </ol>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- end page title -->
-
-                        <div class="row">
+@section('content')
+<div class="row">
                             <div class="col-12">
                                 <div class="card">
                                     <div class="card-body">
@@ -412,10 +272,10 @@
                                                                 'SK IKSASS' => true,
                                                                 'Buku Harian Santri (BHS)' => true,
                                                                 'SK Aktif Asrama' => true,
-                                                                'Raport Qiroati Amsilati' => false,
+                                                                'Raport Qiroati Amsilati' => true,
                                                                 'SK Aktif Madrasah, Sekolah, Qiroati' => true,
-                                                                'Raport Madrasah' => false,
-                                                                'Raport Sekolah PT' => false,
+                                                                'Raport Madrasah' => true,
+                                                                'Raport Sekolah PT' => true,
                                                                 'Fhoto Rumah' => true,
                                                                 'Fhoto Bukti Rekening PLN' => true,
                                                             ];
@@ -435,7 +295,7 @@
                                                                         <i class="ri-eye-line align-middle me-1"></i> Preview
                                                                     </a>
                                                                 </div>
-                                                                <input type="file" name="dokumen[{{ $jenis }}]" class="form-control" accept=".pdf">
+                                                                <input type="file" name="dokumen[{{ $jenis }}]" class="form-control {{ $isRequired ? 'req-tab2' : '' }}" accept=".pdf" data-has-existing="{{ $existingDoc ? '1' : '0' }}">
                                                                 @if($existingDoc)
                                                                     <small class="text-success"><i class="ri-check-line"></i> Dokumen sudah terunggah</small>
                                                                 @endif
@@ -453,75 +313,93 @@
                                                             <input type="text" class="form-control bg-light fw-bold text-primary" value="{{ $periode->tahun_masehi }} — Gelombang {{ $periode->gelombang }}" readonly>
                                                         </div>
                                                         
-                                                        <div class="col-md-6 mb-3">
-                                                            <label class="form-label fw-semibold">Qiro'ati / Amsilati</label>
-                                                            <select name="lembaga_qiroati_id" class="form-select select2">
-                                                                <option value="">-- Pilih Lembaga --</option>
-                                                                @foreach($lembagas as $lembaga)
-                                                                    <option value="{{ $lembaga->id }}" {{ old('lembaga_qiroati_id', $pengajuan->lembaga_qiroati_id) == $lembaga->id ? 'selected' : '' }}>
-                                                                        {{ $lembaga->nama_lembaga }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-6 mb-3">
-                                                            <label class="form-label fw-semibold">Kelas/Smt Qiro'ati</label>
-                                                            <input type="text" name="kelas_qiroati" class="form-control" value="{{ old('kelas_qiroati', $pengajuan->kelas_qiroati) }}" placeholder="Contoh: Kelas 3 / Smt 1">
-                                                        </div>
+                                                        <!-- Kolom Kiri: Lembaga -->
+                                                        <div class="col-md-6">
+                                                            <div class="card border border-light shadow-none">
+                                                                <div class="card-body bg-light bg-opacity-50">
+                                                                    <h5 class="font-size-14 mb-3 border-bottom pb-2">Informasi Lembaga</h5>
+                                                                    <div class="row">
+                                                                        <div class="col-md-7 mb-3">
+                                                                            <label class="form-label fw-semibold">Qiro'ati / Amsilati</label>
+                                                                            <select name="lembaga_qiroati_id" class="form-select select2">
+                                                                                <option value="">-- Pilih Lembaga --</option>
+                                                                                @foreach($lembagas as $lembaga)
+                                                                                    <option value="{{ $lembaga->id }}" {{ old('lembaga_qiroati_id', $pengajuan->lembaga_qiroati_id) == $lembaga->id ? 'selected' : '' }}>
+                                                                                        {{ $lembaga->nama_lembaga }}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="col-md-5 mb-3">
+                                                                            <label class="form-label fw-semibold">Kelas/Smt</label>
+                                                                            <input type="text" name="kelas_qiroati" class="form-control" value="{{ old('kelas_qiroati', $pengajuan->kelas_qiroati) }}" placeholder="Contoh: 3 / Smt 1">
+                                                                        </div>
 
-                                                        <div class="col-md-6 mb-3">
-                                                            <label class="form-label fw-semibold">Lembaga 1 (Madrasah) <span class="text-danger">*</span></label>
-                                                            <select name="lembaga_1_id" class="form-select select2 req-tab3">
-                                                                <option value="">-- Pilih Madrasah --</option>
-                                                                @foreach($lembagas as $lembaga)
-                                                                    <option value="{{ $lembaga->id }}" {{ old('lembaga_1_id', $pengajuan->lembaga_1_id) == $lembaga->id ? 'selected' : '' }}>
-                                                                        {{ $lembaga->nama_lembaga }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
-                                                        </div>
-                                                        <div class="col-md-6 mb-3">
-                                                            <label class="form-label fw-semibold">Kelas Pendidikan 1 <span class="text-danger">*</span></label>
-                                                            <input type="text" name="kelas_pendidikan_1" class="form-control req-tab3" placeholder="Contoh: X" value="{{ old('kelas_pendidikan_1', $pengajuan->kelas_pendidikan_1) }}">
-                                                        </div>
+                                                                        <div class="col-md-7 mb-3">
+                                                                            <label class="form-label fw-semibold">Madrasah <span class="text-danger">*</span></label>
+                                                                            <select name="lembaga_1_id" class="form-select select2 req-tab3">
+                                                                                <option value="">-- Pilih Madrasah --</option>
+                                                                                @foreach($lembagas as $lembaga)
+                                                                                    <option value="{{ $lembaga->id }}" {{ old('lembaga_1_id', $pengajuan->lembaga_1_id) == $lembaga->id ? 'selected' : '' }}>
+                                                                                        {{ $lembaga->nama_lembaga }}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="col-md-5 mb-3">
+                                                                            <label class="form-label fw-semibold">Kelas <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="kelas_pendidikan_1" class="form-control req-tab3" placeholder="Contoh: X" value="{{ old('kelas_pendidikan_1', $pengajuan->kelas_pendidikan_1) }}">
+                                                                        </div>
 
-                                                        <div class="col-md-6 mb-3">
-                                                            <label class="form-label">Lembaga 2 (Sekolah/PT) <small class="text-muted">- Opsional</small></label>
-                                                            <select name="lembaga_2_id" class="form-select select2">
-                                                                <option value="">-- Pilih Sekolah/PT --</option>
-                                                                @foreach($lembagas as $lembaga)
-                                                                    <option value="{{ $lembaga->id }}" {{ old('lembaga_2_id', $pengajuan->lembaga_2_id) == $lembaga->id ? 'selected' : '' }}>
-                                                                        {{ $lembaga->nama_lembaga }}
-                                                                    </option>
-                                                                @endforeach
-                                                            </select>
+                                                                        <div class="col-md-7 mb-3">
+                                                                            <label class="form-label">Sekolah/PT <small class="text-muted">- Ops</small></label>
+                                                                            <select name="lembaga_2_id" class="form-select select2 req-tab3">
+                                                                                <option value="">-- Pilih Sekolah/PT --</option>
+                                                                                @foreach($lembagas as $lembaga)
+                                                                                    <option value="{{ $lembaga->id }}" {{ old('lembaga_2_id', $pengajuan->lembaga_2_id) == $lembaga->id ? 'selected' : '' }}>
+                                                                                        {{ $lembaga->nama_lembaga }}
+                                                                                    </option>
+                                                                                @endforeach
+                                                                            </select>
+                                                                        </div>
+                                                                        <div class="col-md-5 mb-3">
+                                                                            <label class="form-label">Kelas <small class="text-muted">- Ops</small></label>
+                                                                            <input type="text" name="kelas_pendidikan_2" class="form-control req-tab3" placeholder="Contoh: XI" value="{{ old('kelas_pendidikan_2', $pengajuan->kelas_pendidikan_2) }}">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
-                                                        <div class="col-md-6 mb-3">
-                                                            <label class="form-label">Kelas Pendidikan 2 <small class="text-muted">- Opsional</small></label>
-                                                            <input type="text" name="kelas_pendidikan_2" class="form-control" placeholder="Contoh: XI" value="{{ old('kelas_pendidikan_2', $pengajuan->kelas_pendidikan_2) }}">
-                                                        </div>
-
-                                                        <div class="col-12"><hr class="my-2"></div>
-
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">UTAP (Rp) <span class="text-danger">*</span></label>
-                                                            <input type="text" name="jumlah_utap" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('jumlah_utap', number_format($pengajuan->jumlah_utap, 0, ',', '.')) }}">
-                                                        </div>
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">SPP Smt. Gasal (Rp) <span class="text-danger">*</span></label>
-                                                            <input type="text" name="spp_gasal" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('spp_gasal', number_format($pengajuan->spp_gasal, 0, ',', '.')) }}">
-                                                        </div>
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">SPP Smt. Genap (Rp) <span class="text-danger">*</span></label>
-                                                            <input type="text" name="spp_genap" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('spp_genap', number_format($pengajuan->spp_genap, 0, ',', '.')) }}">
-                                                        </div>
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">Living Kost (Rp) <span class="text-danger">*</span></label>
-                                                            <input type="text" name="living_cost" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('living_cost', number_format($pengajuan->living_cost, 0, ',', '.')) }}">
-                                                        </div>
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">Biaya Lain (Rp) <span class="text-danger">*</span></label>
-                                                            <input type="text" name="biaya_lain" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('biaya_lain', number_format($pengajuan->biaya_lain, 0, ',', '.')) }}">
+                                                        
+                                                        <!-- Kolom Kanan: Nominal -->
+                                                        <div class="col-md-6">
+                                                            <div class="card border border-light shadow-none">
+                                                                <div class="card-body bg-light bg-opacity-50">
+                                                                    <h5 class="font-size-14 mb-3 border-bottom pb-2">Rincian Nominal Bantuan</h5>
+                                                                    <div class="row">
+                                                                        <div class="col-md-12 mb-3">
+                                                                            <label class="form-label fw-semibold">UTAP (Rp) <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="jumlah_utap" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('jumlah_utap', number_format($pengajuan->jumlah_utap, 0, ',', '.')) }}">
+                                                                        </div>
+                                                                        <div class="col-md-6 mb-3">
+                                                                            <label class="form-label fw-semibold">SPP Gasal (Rp) <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="spp_gasal" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('spp_gasal', number_format($pengajuan->spp_gasal, 0, ',', '.')) }}">
+                                                                        </div>
+                                                                        <div class="col-md-6 mb-3">
+                                                                            <label class="form-label fw-semibold">SPP Genap (Rp) <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="spp_genap" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('spp_genap', number_format($pengajuan->spp_genap, 0, ',', '.')) }}">
+                                                                        </div>
+                                                                        <div class="col-md-6 mb-3">
+                                                                            <label class="form-label fw-semibold">Living Kost (Rp) <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="living_cost" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('living_cost', number_format($pengajuan->living_cost, 0, ',', '.')) }}">
+                                                                        </div>
+                                                                        <div class="col-md-6 mb-3">
+                                                                            <label class="form-label fw-semibold">Biaya Lain (Rp) <span class="text-danger">*</span></label>
+                                                                            <input type="text" name="biaya_lain" class="form-control req-tab3 format-rupiah" placeholder="0" value="{{ old('biaya_lain', number_format($pengajuan->biaya_lain, 0, ',', '.')) }}">
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -539,8 +417,11 @@
                                                 <button type="button" class="btn btn-info waves-effect waves-light" id="btn-next">
                                                     Selanjutnya <i class="ri-arrow-right-s-line ms-1"></i>
                                                 </button>
-                                                <button type="submit" class="btn btn-primary waves-effect waves-light d-none" id="btn-simpan">
-                                                    <i class="ri-save-line me-1"></i> Simpan Pengajuan
+                                                <button type="submit" name="action" value="draft" class="btn btn-warning waves-effect waves-light">
+                                                    <i class="ri-save-2-line me-1"></i> Simpan Draf
+                                                </button>
+                                                <button type="submit" name="action" value="submit" class="btn btn-primary waves-effect waves-light d-none btn-submit" id="btn-simpan">
+                                                    <i class="ri-save-line me-1"></i> Simpan Perubahan
                                                 </button>
                                             </div>
 
@@ -564,17 +445,29 @@
                                     </div>
                                 </div>
                             </div>
-                        </div>
+@endsection
 
-                    </div>
+@section('modals')
+    <!-- Preview Modal -->
+    <div class="modal fade" id="previewModal" tabindex="-1" role="dialog" aria-labelledby="previewModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="previewModalLabel">Preview Dokumen</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <!-- End Page-content -->
+                <div class="modal-body p-0" style="height: 80vh;">
+                    <iframe src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
 
-                <footer class="footer">
-                    <div class="container-fluid">
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <script>document.write(new Date().getFullYear())</script> © ZIZTREN.
+@push('scripts')
+    <script src="{{ asset("assets/libs/select2/js/select2.min.js") }}"></script>
+    <script>
+document.write(new Date().getFullYear())</script> © Lazimy.
                             </div>
                         </div>
                     </div>
@@ -631,7 +524,121 @@
                 });
 
                 // Tidak ada inisialisasi Select2 untuk #nis karena diubah menjadi readonly input text
+                
+                // Region Dropdowns Logic
+                function loadProvinsi(selectedValue = null) {
+                    $.ajax({
+                        url: '/api/regions/provinsi',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function(data) {
+                            var html = '<option value="">-- Pilih Provinsi --</option>';
+                            $.each(data, function(key, val) {
+                                html += '<option value="'+val.id+'">'+val.name+'</option>';
+                            });
+                            $('#ro_provinsi').html(html);
+                            if(selectedValue) {
+                                $('#ro_provinsi').val(selectedValue).trigger('change');
+                            }
+                        }
+                    });
+                }
+
+                $('#ro_provinsi').on('change', function() {
+                    var id = $(this).val();
+                    if(id) {
+                        $('#ro_kabupaten').prop('disabled', false);
+                        $.ajax({
+                            url: '/api/regions/kota/'+id,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(data) {
+                                var html = '<option value="">-- Pilih Kabupaten/Kota --</option>';
+                                $.each(data, function(key, val) {
+                                    html += '<option value="'+val.id+'">'+val.name+'</option>';
+                                });
+                                // Keep the current value if it's in the options (for edit/autofill)
+                                var currentVal = $('#ro_kabupaten').data('init-val');
+                                $('#ro_kabupaten').html(html);
+                                if (currentVal) {
+                                    $('#ro_kabupaten').val(currentVal).trigger('change');
+                                    $('#ro_kabupaten').data('init-val', null); // clear after use
+                                }
+                            }
+                        });
+                    } else {
+                        $('#ro_kabupaten').html('<option value="">-- Pilih Kabupaten/Kota --</option>').prop('disabled', true);
+                        $('#ro_kecamatan').html('<option value="">-- Pilih Kecamatan --</option>').prop('disabled', true);
+                        $('#ro_desa').html('<option value="">-- Pilih Desa/Kelurahan --</option>').prop('disabled', true);
+                    }
+                });
+
+                $('#ro_kabupaten').on('change', function() {
+                    var id = $(this).val();
+                    if(id) {
+                        $('#ro_kecamatan').prop('disabled', false);
+                        $.ajax({
+                            url: '/api/regions/kecamatan/'+id,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(data) {
+                                var html = '<option value="">-- Pilih Kecamatan --</option>';
+                                $.each(data, function(key, val) {
+                                    html += '<option value="'+val.id+'">'+val.name+'</option>';
+                                });
+                                var currentVal = $('#ro_kecamatan').data('init-val');
+                                $('#ro_kecamatan').html(html);
+                                if (currentVal) {
+                                    $('#ro_kecamatan').val(currentVal).trigger('change');
+                                    $('#ro_kecamatan').data('init-val', null); // clear after use
+                                }
+                            }
+                        });
+                    } else {
+                        $('#ro_kecamatan').html('<option value="">-- Pilih Kecamatan --</option>').prop('disabled', true);
+                        $('#ro_desa').html('<option value="">-- Pilih Desa/Kelurahan --</option>').prop('disabled', true);
+                    }
+                });
+
+                $('#ro_kecamatan').on('change', function() {
+                    var id = $(this).val();
+                    if(id) {
+                        $('#ro_desa').prop('disabled', false);
+                        $.ajax({
+                            url: '/api/regions/desa/'+id,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(data) {
+                                var html = '<option value="">-- Pilih Desa/Kelurahan --</option>';
+                                $.each(data, function(key, val) {
+                                    html += '<option value="'+val.id+'">'+val.name+'</option>';
+                                });
+                                var currentVal = $('#ro_desa').data('init-val');
+                                $('#ro_desa').html(html);
+                                if (currentVal) {
+                                    $('#ro_desa').val(currentVal).trigger('change');
+                                    $('#ro_desa').data('init-val', null); // clear after use
+                                }
+                            }
+                        });
+                    } else {
+                        $('#ro_desa').html('<option value="">-- Pilih Desa/Kelurahan --</option>').prop('disabled', true);
+                    }
+                });
+
+                var existingProvinsi = "{{ $pengajuan->santri->provinsi_id ?? '' }}";
+                if(existingProvinsi) {
+                    $('#ro_kabupaten').data('init-val', "{{ $pengajuan->santri->kabupaten_id ?? '' }}");
+                    $('#ro_kecamatan').data('init-val', "{{ $pengajuan->santri->kecamatan_id ?? '' }}");
+                    $('#ro_desa').data('init-val', "{{ $pengajuan->santri->desa_id ?? '' }}");
+                    loadProvinsi(existingProvinsi);
+                } else {
+                    loadProvinsi();
+                }
+
                 // Live Validation Function
+                var allFormComplete = false;
+
                 function checkTabs() {
                     // Check Tab 1
                     var tab1_complete = true;
@@ -662,16 +669,28 @@
                         $('#wizard-step-3').removeClass('completed');
                         $('#wizard-step-3 .step-circle').html('<i class="ri-money-dollar-circle-line"></i>');
                     }
-                    
-                    
-                    // Check Tab 2
-                    var tab2_complete = true;
-                    $('.req-tab2').each(function() {
+
+                    // Check Tab 2 - text/textarea fields
+                    var tab2_text_complete = true;
+                    $('.req-tab2:not([type="file"])').each(function() {
                         if ($(this).val() === '' || $(this).val() === null) {
-                            tab2_complete = false;
+                            tab2_text_complete = false;
                         }
                     });
-                    
+
+                    // Check Tab 2 - required file inputs
+                    // In edit form: a file is OK if it already has an existing doc OR user selected a new file
+                    var tab2_files_complete = true;
+                    $('.req-tab2[type="file"]').each(function() {
+                        var hasExisting = $(this).data('has-existing') === '1' || $(this).data('has-existing') === 1;
+                        var hasNewFile  = this.files.length > 0;
+                        if (!hasExisting && !hasNewFile) {
+                            tab2_files_complete = false;
+                        }
+                    });
+
+                    var tab2_complete = tab2_text_complete && tab2_files_complete;
+
                     if (tab2_complete) {
                         $('#wizard-step-2').addClass('completed');
                         $('#wizard-step-2 .step-circle').html('<i class="ri-check-line"></i>');
@@ -680,7 +699,19 @@
                         $('#wizard-step-2 .step-circle').html('<i class="ri-file-text-line"></i>');
                     }
 
-                    
+                    // All tabs must be complete before submit is enabled
+                    allFormComplete = tab1_complete && tab2_complete && tab3_complete;
+                    updateSubmitButton();
+                }
+
+                function updateSubmitButton() {
+                    if (allFormComplete) {
+                        $('#btn-simpan').removeClass('disabled').prop('disabled', false)
+                            .removeClass('btn-secondary').addClass('btn-primary');
+                    } else {
+                        $('#btn-simpan').addClass('disabled').prop('disabled', true)
+                            .removeClass('btn-primary').addClass('btn-secondary');
+                    }
                 }
 
                 // Trigger check on any input change
@@ -695,7 +726,7 @@
                 
                 // Highlight file inputs that have files
                 $('input[type="file"]').on('change', function() {
-                    var previewBtn = $(this).siblings('.d-flex').find('.btn-preview');
+                    var previewBtn = $(this).closest('.mb-3').find('.btn-preview');
                     if ($(this).val() && this.files[0]) {
                         $(this).addClass('bg-success bg-opacity-10 border-success');
                         previewBtn.removeClass('d-none');
@@ -709,6 +740,8 @@
                         $(this).removeClass('bg-success bg-opacity-10 border-success');
                         previewBtn.addClass('d-none');
                     }
+                    // Re-run complete check when file input changes
+                    checkTabs();
                 });
 
                 // Preview for existing documents
@@ -728,8 +761,22 @@
                 function updateButtons() {
                     $('#btn-prev').toggleClass('d-none', currentTab === 0);
                     $('#btn-next').toggleClass('d-none', currentTab === tabs.length - 1);
-                    $('#btn-simpan').toggleClass('d-none', currentTab !== tabs.length - 1);
+                    $('.btn-submit').toggleClass('d-none', currentTab !== tabs.length - 1);
+                    $('button[value="draft"]').toggleClass('d-none', currentTab === tabs.length - 1);
+                    updateSubmitButton();
                 }
+
+                // Bypass client-side validation when Draft is clicked
+                $('button[value="draft"]').click(function() {
+                    $('form').addClass('draft-mode');
+                });
+                
+                $('form').submit(function(e) {
+                    if ($(this).hasClass('draft-mode')) {
+                        return true; // Bypass custom validation logic if any
+                    }
+                    // other validation...
+                });
 
                 $('#btn-next').click(function() {
                     if (currentTab < tabs.length - 1) {
@@ -754,10 +801,5 @@
                 updateButtons();
 
             });
-        </script>
-
-        <!-- App js -->
-        <script src="{{ asset("assets/js/app.js") }}"></script>
-    </body>
-
-</html>
+    </script>
+@endpush

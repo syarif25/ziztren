@@ -46,6 +46,20 @@ class BeasiswaController extends Controller
             ->addColumn('spp_genap', function ($row) { return 'Rp ' . number_format($row->spp_genap, 0, ',', '.'); })
             ->addColumn('living_cost', function ($row) { return 'Rp ' . number_format($row->living_cost, 0, ',', '.'); })
             ->addColumn('biaya_lain', function ($row) { return 'Rp ' . number_format($row->biaya_lain, 0, ',', '.'); })
+            ->editColumn('created_at', function ($row) {
+                return $row->created_at ? \Carbon\Carbon::parse($row->created_at)->translatedFormat('d M Y') : '-';
+            })
+            ->editColumn('tanggal_bantuan', function ($row) {
+                return $row->tanggal_bantuan ? \Carbon\Carbon::parse($row->tanggal_bantuan)->translatedFormat('d M Y') : null;
+            })
+            ->filterColumn('created_at', function($query, $keyword) {
+                $sql = "DATE_FORMAT(pengajuan_beasiswas.created_at, '%d %b %Y') like ?";
+                // Handle Indonesian month abbreviation diffs if necessary, but '%d %b %Y' covers "Sep", "Nov", "Dec/Des".
+                // We'll also allow standard format searching
+                $query->whereRaw($sql, ["%{$keyword}%"])
+                      ->orWhere('pengajuan_beasiswas.created_at', 'like', "%{$keyword}%")
+                      ->orWhere('pengajuan_beasiswas.tanggal_bantuan', 'like', "%{$keyword}%");
+            })
             ->filterColumn('periode', function($query, $keyword) {
                 $query->whereHas('periode', function($q) use ($keyword) {
                     $q->where('tahun_masehi', 'like', "%{$keyword}%")
@@ -143,25 +157,32 @@ class BeasiswaController extends Controller
     public function store(Request $request)
     {
         // Unformat nominal inputs
-        $request->merge([
-            'jumlah_utap' => str_replace('.', '', $request->jumlah_utap),
-            'spp_gasal' => str_replace('.', '', $request->spp_gasal),
-            'spp_genap' => str_replace('.', '', $request->spp_genap),
-            'living_cost' => str_replace('.', '', $request->living_cost),
-            'biaya_lain' => str_replace('.', '', $request->biaya_lain),
+                $request->merge([
+            'jumlah_utap' => str_replace('.', '', $request->jumlah_utap ?? 0) ?: 0,
+            'spp_gasal' => str_replace('.', '', $request->spp_gasal ?? 0) ?: 0,
+            'spp_genap' => str_replace('.', '', $request->spp_genap ?? 0) ?: 0,
+            'living_cost' => str_replace('.', '', $request->living_cost ?? 0) ?: 0,
+            'biaya_lain' => str_replace('.', '', $request->biaya_lain ?? 0) ?: 0,
         ]);
 
-        $request->validate([
+                $action = $request->input('action', 'submit');
+
+        $rules = [
             'nis' => 'required',
             'periode_id' => 'required',
-            'lembaga_1_id' => 'required',
-            'kelas_pendidikan_1' => 'required',
-            'jumlah_utap' => 'required|numeric',
-            'spp_gasal' => 'required|numeric',
-            'spp_genap' => 'required|numeric',
-            'living_cost' => 'required|numeric',
-            'biaya_lain' => 'required|numeric',
-        ], [
+        ];
+
+        if ($action === 'submit') {
+            $rules['lembaga_1_id'] = 'required';
+            $rules['kelas_pendidikan_1'] = 'required';
+            $rules['jumlah_utap'] = 'required|numeric';
+            $rules['spp_gasal'] = 'required|numeric';
+            $rules['spp_genap'] = 'required|numeric';
+            $rules['living_cost'] = 'required|numeric';
+            $rules['biaya_lain'] = 'required|numeric';
+        }
+
+        $request->validate($rules, [
             'required' => 'Kolom :attribute wajib diisi.',
             'numeric' => 'Kolom :attribute harus berupa angka.',
         ], [
@@ -228,7 +249,7 @@ class BeasiswaController extends Controller
                 'prestasi_qiroati' => $request->prestasi_qiroati,
                 'prestasi_madrasah' => $request->prestasi_madrasah,
                 'prestasi_sekolah' => $request->prestasi_sekolah,
-                'status_pengajuan' => 'Proses',
+                'status_pengajuan' => $action === 'draft' ? 'Draft' : 'Proses',
                 'tanggal_bantuan' => date('Y-m-d'),
             ]);
 
@@ -241,7 +262,7 @@ class BeasiswaController extends Controller
                 foreach ($request->file('dokumen') as $jenis_dokumen => $file) {
                     if ($file->isValid()) {
                         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                        $path = $file->storeAs($pathStr, $filename, 'local');
+                        $path = $file->storeAs($pathStr, $filename, 'public');
                         
                         DokumenPengajuan::create([
                             'pengajuan_id' => $pengajuan->id,
@@ -256,18 +277,29 @@ class BeasiswaController extends Controller
             // Catat histori status
             \App\Models\HistoriStatusBeasiswa::create([
                 'pengajuan_id' => $pengajuan->id,
-                'status' => 'Proses',
+                'status' => $action === 'draft' ? 'Draft' : 'Proses',
                 'tanggal_bantuan' => date('Y-m-d'),
-                'catatan' => 'Pengajuan disubmit dan masuk ke tahap proses.',
+                'catatan' => null,
             ]);
 
             DB::commit();
-            return redirect()->route('beasiswa.index')->with('success', 'Pengajuan Beasiswa berhasil ditambahkan.');
+            return redirect()->route('beasiswa.index')->with('success', $action === 'draft' ? 'Draf Pengajuan Beasiswa berhasil disimpan.' : 'Pengajuan Beasiswa berhasil ditambahkan.');
 
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Gagal menambahkan pengajuan: ' . $e->getMessage())->withInput();
         }
+    }
+
+    public function show($id)
+    {
+        $pengajuan = PengajuanBeasiswa::with([
+            'santri', 'dokumen', 'periode', 
+            'lembaga1', 'lembaga2', 'lembagaQiroati',
+            'santri.provinsi', 'santri.kabupaten', 'santri.kecamatan', 'santri.desa'
+        ])->findOrFail($id);
+        
+        return view('beasiswa.show', compact('pengajuan'));
     }
 
     public function edit($id)
@@ -284,34 +316,44 @@ class BeasiswaController extends Controller
     public function update(Request $request, $id)
     {
         // Remove dot separators
-        $request->merge([
-            'jumlah_utap' => str_replace('.', '', $request->jumlah_utap),
-            'spp_gasal' => str_replace('.', '', $request->spp_gasal),
-            'spp_genap' => str_replace('.', '', $request->spp_genap),
-            'living_cost' => str_replace('.', '', $request->living_cost),
-            'biaya_lain' => str_replace('.', '', $request->biaya_lain),
+                $request->merge([
+            'jumlah_utap' => str_replace('.', '', $request->jumlah_utap ?? 0) ?: 0,
+            'spp_gasal' => str_replace('.', '', $request->spp_gasal ?? 0) ?: 0,
+            'spp_genap' => str_replace('.', '', $request->spp_genap ?? 0) ?: 0,
+            'living_cost' => str_replace('.', '', $request->living_cost ?? 0) ?: 0,
+            'biaya_lain' => str_replace('.', '', $request->biaya_lain ?? 0) ?: 0,
         ]);
 
-        $request->validate([
-            'lembaga_1_id' => 'required',
-            'kelas_pendidikan_1' => 'required',
-            'jumlah_utap' => 'required|numeric',
-            'spp_gasal' => 'required|numeric',
-            'spp_genap' => 'required|numeric',
-            'living_cost' => 'required|numeric',
-            'biaya_lain' => 'required|numeric',
-        ], [
-            'required' => 'Kolom :attribute wajib diisi.',
-            'numeric' => 'Kolom :attribute harus berupa angka.',
-        ], [
-            'lembaga_1_id' => 'Lembaga 1',
-            'kelas_pendidikan_1' => 'Kelas Pendidikan 1',
-            'jumlah_utap' => 'Jumlah UTAP',
-            'spp_gasal' => 'SPP Gasal',
-            'spp_genap' => 'SPP Genap',
-            'living_cost' => 'Living Cost',
-            'biaya_lain' => 'Biaya Lain',
-        ]);
+                $action = $request->input('action', 'submit');
+
+        $rules = [];
+
+        if ($action === 'submit') {
+            $rules = [
+                'lembaga_1_id' => 'required',
+                'kelas_pendidikan_1' => 'required',
+                'jumlah_utap' => 'required|numeric',
+                'spp_gasal' => 'required|numeric',
+                'spp_genap' => 'required|numeric',
+                'living_cost' => 'required|numeric',
+                'biaya_lain' => 'required|numeric',
+            ];
+        }
+
+        if (!empty($rules)) {
+            $request->validate($rules, [
+                'required' => 'Kolom :attribute wajib diisi.',
+                'numeric' => 'Kolom :attribute harus berupa angka.',
+            ], [
+                'lembaga_1_id' => 'Lembaga 1',
+                'kelas_pendidikan_1' => 'Kelas Pendidikan 1',
+                'jumlah_utap' => 'Jumlah UTAP',
+                'spp_gasal' => 'SPP Gasal',
+                'spp_genap' => 'SPP Genap',
+                'living_cost' => 'Living Cost',
+                'biaya_lain' => 'Biaya Lain',
+            ]);
+        }
 
         $pengajuan = PengajuanBeasiswa::findOrFail($id);
 
@@ -338,7 +380,7 @@ class BeasiswaController extends Controller
                 ]);
             }
 
-            $pengajuan->update([
+            $updateData = [
                 'lembaga_1_id' => $request->lembaga_1_id,
                 'kelas_pendidikan_1' => $request->kelas_pendidikan_1,
                 'lembaga_2_id' => $request->lembaga_2_id,
@@ -356,10 +398,61 @@ class BeasiswaController extends Controller
                 'prestasi_qiroati' => $request->prestasi_qiroati,
                 'prestasi_madrasah' => $request->prestasi_madrasah,
                 'prestasi_sekolah' => $request->prestasi_sekolah,
-            ]);
+            ];
+
+            if ($action === 'submit' && strtolower($pengajuan->status_pengajuan) === 'draft') {
+                $updateData['status_pengajuan'] = 'Proses';
+                
+                \App\Models\HistoriStatusBeasiswa::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'status' => 'Proses',
+                    'tanggal_bantuan' => date('Y-m-d'),
+                    'catatan' => null,
+                ]);
+            }
+            
+            $pengajuan->update($updateData);
+
+            // Handle file uploads during edit
+            if ($request->has('dokumen')) {
+                $year = date('Y');
+                $month = date('m');
+                $pathStr = "dokumen/{$year}/{$month}";
+                
+                foreach ($request->file('dokumen') as $jenis_dokumen => $file) {
+                    if ($file->isValid()) {
+                        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+                        $path = $file->storeAs($pathStr, $filename, 'public');
+                        
+                        $existingDoc = DokumenPengajuan::where('pengajuan_id', $pengajuan->id)
+                                        ->where('jenis_dokumen', $jenis_dokumen)
+                                        ->first();
+                        
+                        if ($existingDoc) {
+                            // Hapus file lama jika ada
+                            if (Storage::disk('public')->exists($existingDoc->file_path)) {
+                                Storage::disk('public')->delete($existingDoc->file_path);
+                            }
+                            // Update record
+                            $existingDoc->update([
+                                'file_path' => $path,
+                                'file_size' => $file->getSize(),
+                            ]);
+                        } else {
+                            // Create new record
+                            DokumenPengajuan::create([
+                                'pengajuan_id' => $pengajuan->id,
+                                'jenis_dokumen' => $jenis_dokumen,
+                                'file_path' => $path,
+                                'file_size' => $file->getSize(),
+                            ]);
+                        }
+                    }
+                }
+            }
 
             DB::commit();
-            return redirect()->route('beasiswa.index')->with('success', 'Pengajuan Beasiswa berhasil diubah.');
+            return redirect()->route('beasiswa.index')->with('success', $action === 'draft' ? 'Draf Pengajuan Beasiswa berhasil disimpan.' : 'Pengajuan Beasiswa berhasil diubah.');
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -393,7 +486,7 @@ class BeasiswaController extends Controller
             $pathStr = "dokumen/{$year}/{$month}";
             
             $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-            $path = $file->storeAs($pathStr, $filename, 'local');
+            $path = $file->storeAs($pathStr, $filename, 'public');
             
             DokumenPengajuan::create([
                 'pengajuan_id' => $pengajuan->id,
@@ -415,7 +508,7 @@ class BeasiswaController extends Controller
     {
         $dokumen = DokumenPengajuan::findOrFail($id);
         
-        $fullPath = Storage::disk('local')->path($dokumen->file_path);
+        $fullPath = Storage::disk('public')->path($dokumen->file_path);
         
         if (!file_exists($fullPath)) {
             abort(404, 'File dokumen tidak ditemukan di server.');
@@ -435,7 +528,7 @@ class BeasiswaController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string|in:Pending,Proses,ACC,Pencairan',
+            'status_pengajuan' => 'required|string|in:draft,proses,acc,pencairan',
             'tanggal_bantuan' => 'nullable|date',
             'catatan' => 'nullable|string'
         ]);
@@ -446,14 +539,14 @@ class BeasiswaController extends Controller
         try {
             // Update main status
             $pengajuan->update([
-                'status_pengajuan' => $request->status,
+                'status_pengajuan' => $request->status_pengajuan,
                 'tanggal_bantuan' => $request->tanggal_bantuan ?? $pengajuan->tanggal_bantuan
             ]);
 
             // Insert to history
             \App\Models\HistoriStatusBeasiswa::create([
                 'pengajuan_id' => $pengajuan->id,
-                'status' => $request->status,
+                'status' => $request->status_pengajuan,
                 'tanggal_bantuan' => $request->tanggal_bantuan,
                 'catatan' => $request->catatan,
             ]);
@@ -464,5 +557,13 @@ class BeasiswaController extends Controller
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Gagal memperbarui status: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function cetakPdf($id)
+    {
+        $pengajuan = PengajuanBeasiswa::with(['santri.provinsi', 'santri.kabupaten', 'santri.kecamatan', 'santri.desa', 'lembaga1', 'lembaga2', 'lembagaQiroati', 'periode', 'dokumen'])->findOrFail($id);
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('beasiswa.pdf', compact('pengajuan'));
+        $pdf->setPaper('A4', 'portrait');
+        return $pdf->stream('Form_Pengajuan_' . $pengajuan->nis . '.pdf');
     }
 }
