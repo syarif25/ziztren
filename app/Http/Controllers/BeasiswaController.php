@@ -446,8 +446,13 @@ class BeasiswaController extends Controller
             
             $pengajuan->update($updateData);
 
-            // Handle update tanda tangan digital Base64 Pemohon (Limit max 500KB string)
-            if ($request->filled('tanda_tangan_base64') && strlen($request->tanda_tangan_base64) <= 500000) {
+            // Handle update/hapus tanda tangan digital Base64 Pemohon
+            if ($request->tanda_tangan_base64 === 'REMOVE') {
+                if ($pengajuan->tanda_tangan && Storage::disk('public')->exists($pengajuan->tanda_tangan)) {
+                    Storage::disk('public')->delete($pengajuan->tanda_tangan);
+                }
+                $pengajuan->update(['tanda_tangan' => null]);
+            } elseif ($request->filled('tanda_tangan_base64') && strlen($request->tanda_tangan_base64) <= 500000) {
                 $base64Image = $request->tanda_tangan_base64;
                 if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
                     $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
@@ -465,8 +470,13 @@ class BeasiswaController extends Controller
                 }
             }
 
-            // Handle update tanda tangan digital Base64 Wali (Limit max 500KB string)
-            if ($request->filled('tanda_tangan_wali_base64') && strlen($request->tanda_tangan_wali_base64) <= 500000) {
+            // Handle update/hapus tanda tangan digital Base64 Wali
+            if ($request->tanda_tangan_wali_base64 === 'REMOVE') {
+                if ($pengajuan->tanda_tangan_wali && Storage::disk('public')->exists($pengajuan->tanda_tangan_wali)) {
+                    Storage::disk('public')->delete($pengajuan->tanda_tangan_wali);
+                }
+                $pengajuan->update(['tanda_tangan_wali' => null]);
+            } elseif ($request->filled('tanda_tangan_wali_base64') && strlen($request->tanda_tangan_wali_base64) <= 500000) {
                 $base64ImageWali = $request->tanda_tangan_wali_base64;
                 if (preg_match('/^data:image\/(\w+);base64,/', $base64ImageWali, $typeWali)) {
                     $base64ImageWali = substr($base64ImageWali, strpos($base64ImageWali, ',') + 1);
