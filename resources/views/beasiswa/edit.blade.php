@@ -557,9 +557,7 @@
                 <div class="modal-body p-3 p-md-4">
                     <div class="alert alert-info alert-dismissible fade show p-2 mb-3 font-size-12 d-flex align-items-center" role="alert">
                         <i class="ri-information-line font-size-16 me-2"></i>
-                        <div>
-                            <strong>Petunjuk:</strong> Tanda tangani pada area kanvas di bawah ini. Anda dapat memutar layar menjadi landscape di smartphone atau tablet untuk area yang lebih lega.
-                        </div>
+                       
                     </div>
 
                     <!-- Canvas Wrapper -->
@@ -604,7 +602,7 @@
                         <i class="ri-file-pdf-line font-size-20 text-danger me-2"></i>
                         <div>
                             <h5 class="modal-title font-size-15 mb-0" id="modalCetakPdfLabel">Cek Formulir PDF Pengajuan Beasiswa</h5>
-                            <small class="text-muted font-size-11">Periksa hasil tanda tangan digital dan data pengajuan pada dokumen PDF</small>
+                            <!-- <small class="text-muted font-size-11">Periksa hasil tanda tangan digital dan data pengajuan pada dokumen PDF</small> -->
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -993,7 +991,7 @@
                     currentSigTarget = target;
                     if (target === 'wali') {
                         $('#modalSignatureLabel').text('Tanda Tangan Wali / Ka. Kamar');
-                        $('#modalSignatureSubtitle').text('Goreskan tanda tangan Wali atau Kepala Kamar menggunakan jari atau stylus');
+                        $('#modalSignatureSubtitle').text('.');
                     } else {
                         $('#modalSignatureLabel').text('Tanda Tangan Santri (Pemohon)');
                         $('#modalSignatureSubtitle').text('Goreskan tanda tangan Santri Pemohon menggunakan jari atau stylus');

@@ -536,9 +536,7 @@
                 <div class="modal-body p-3 p-md-4">
                     <div class="alert alert-info alert-dismissible fade show p-2 mb-3 font-size-12 d-flex align-items-center" role="alert">
                         <i class="ri-information-line font-size-16 me-2"></i>
-                        <div>
-                            <strong>Petunjuk:</strong> Tanda tangani pada area kanvas di bawah ini. Anda dapat memutar layar menjadi landscape di smartphone atau tablet untuk area yang lebih lega.
-                        </div>
+                        
                     </div>
 
                     <!-- Canvas Wrapper -->
