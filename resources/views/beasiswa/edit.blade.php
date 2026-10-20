@@ -402,18 +402,23 @@
                                                             </div>
                                                         </div>
 
-                                                        <!-- Bagian Pengesahan Tanda Tangan -->
+                                                        <!-- Bagian Pengesahan Tanda Tangan (Dengan Modal Signature) -->
                                                         <div class="col-12 mt-3">
                                                             <div class="card border border-light shadow-none">
                                                                 <div class="card-body bg-light bg-opacity-50">
-                                                                    <h5 class="font-size-14 mb-3 border-bottom pb-2">Pengesahan Tanda Tangan Pemohon & Wali</h5>
+                                                                    <div class="d-flex align-items-center justify-content-between border-bottom pb-2 mb-3">
+                                                                        <h5 class="font-size-14 mb-0">
+                                                                            <i class="ri-quill-pen-line me-1 text-primary"></i> Pengesahan Tanda Tangan Pemohon & Wali
+                                                                        </h5>
+                                                                        <small class="text-muted">Klik kotak untuk menandatangani di modal/layar lega</small>
+                                                                    </div>
                                                                     <div class="row g-3">
                                                                         <!-- TTD Wali / Ka. Kamar -->
                                                                         <div class="col-md-6">
                                                                             <div class="d-flex justify-content-between align-items-center mb-2">
                                                                                 <label class="form-label fw-semibold mb-0">Tanda Tangan Wali / Ka. Kamar</label>
-                                                                                <button type="button" class="btn btn-sm btn-light border py-0 px-2" id="btn-clear-signature-wali">
-                                                                                    <i class="ri-refresh-line me-1"></i>Reset
+                                                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 {{ empty($waliTtdBase64) ? 'd-none' : '' }}" id="btn-reset-preview-wali">
+                                                                                    <i class="ri-delete-bin-line me-1"></i>Hapus
                                                                                 </button>
                                                                             </div>
 
@@ -422,18 +427,19 @@
                                                                                 $waliTtdBase64 = ($waliTtdPath && file_exists($waliTtdPath)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($waliTtdPath)) : null;
                                                                             @endphp
 
-                                                                            @if($waliTtdBase64)
-                                                                                <div class="border rounded bg-white p-2 text-center mb-2" id="box-ttd-wali-preview">
-                                                                                    <img src="{{ $waliTtdBase64 }}" style="max-height: 70px; width: auto;" alt="TTD Wali">
-                                                                                    <div class="text-muted font-size-11 mt-1">Tanda tangan saat ini (tersimpan)</div>
+                                                                            <div class="border rounded bg-white text-center p-3 position-relative signature-clickable-box" id="box-preview-wali" style="min-height: 140px; cursor: pointer; border-style: dashed !important; border-width: 2px !important; border-color: #cbd5e1 !important;" onclick="openSignatureModal('wali')">
+                                                                                <div id="wali-placeholder-content" class="py-3 text-muted {{ $waliTtdBase64 ? 'd-none' : '' }}">
+                                                                                    <div class="avatar-xs mx-auto mb-2">
+                                                                                        <span class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                                                                            <i class="ri-edit-2-line font-size-16"></i>
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <span class="fw-medium font-size-13 d-block text-dark">Klik untuk Tanda Tangan Wali</span>
+                                                                                    <small class="text-muted font-size-11">Membuka kanvas tanda tangan lega</small>
                                                                                 </div>
-                                                                            @endif
-
-                                                                            <div class="border rounded bg-white position-relative" style="width: 100%; height: 160px; touch-action: none; overflow: hidden;">
-                                                                                <canvas id="signature-pad-wali" style="width: 100%; height: 100%; cursor: crosshair;"></canvas>
-                                                                                <div id="signature-placeholder-wali" class="position-absolute top-50 start-50 translate-middle text-muted opacity-50 text-center" style="pointer-events: none; width: 90%;">
-                                                                                    <i class="ri-edit-2-line font-size-18 d-block mb-1"></i>
-                                                                                    <span class="font-size-12">Tanda tangan wali di sini</span>
+                                                                                <div id="wali-signed-content" class="{{ empty($waliTtdBase64) ? 'd-none' : '' }}">
+                                                                                    <img id="img-preview-wali" src="{{ $waliTtdBase64 ?? '' }}" style="max-height: 100px; max-width: 100%; object-fit: contain;" alt="TTD Wali">
+                                                                                    <div class="text-success font-size-11 mt-1"><i class="ri-check-line me-1"></i>Tanda tangan tersimpan (Klik untuk ubah)</div>
                                                                                 </div>
                                                                             </div>
                                                                             <input type="hidden" name="tanda_tangan_wali_base64" id="tanda_tangan_wali_base64">
@@ -442,30 +448,31 @@
 
                                                                         <!-- TTD Santri / Pemohon -->
                                                                         <div class="col-md-6">
-                                                                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                                                                <label class="form-label fw-semibold mb-0">Tanda Tangan Santri (Pemohon)</label>
-                                                                                <button type="button" class="btn btn-sm btn-light border py-0 px-2" id="btn-clear-signature">
-                                                                                    <i class="ri-refresh-line me-1"></i>Reset
-                                                                                </button>
-                                                                            </div>
-
                                                                             @php
                                                                                 $pemohonTtdPath = $pengajuan->tanda_tangan ? storage_path('app/public/' . $pengajuan->tanda_tangan) : null;
                                                                                 $pemohonTtdBase64 = ($pemohonTtdPath && file_exists($pemohonTtdPath)) ? 'data:image/png;base64,' . base64_encode(file_get_contents($pemohonTtdPath)) : null;
                                                                             @endphp
 
-                                                                            @if($pemohonTtdBase64)
-                                                                                <div class="border rounded bg-white p-2 text-center mb-2" id="box-ttd-pemohon-preview">
-                                                                                    <img src="{{ $pemohonTtdBase64 }}" style="max-height: 70px; width: auto;" alt="TTD Pemohon">
-                                                                                    <div class="text-muted font-size-11 mt-1">Tanda tangan saat ini (tersimpan)</div>
-                                                                                </div>
-                                                                            @endif
+                                                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                                <label class="form-label fw-semibold mb-0">Tanda Tangan Santri (Pemohon)</label>
+                                                                                <button type="button" class="btn btn-sm btn-outline-danger py-0 px-2 {{ empty($pemohonTtdBase64) ? 'd-none' : '' }}" id="btn-reset-preview-pemohon">
+                                                                                    <i class="ri-delete-bin-line me-1"></i>Hapus
+                                                                                </button>
+                                                                            </div>
 
-                                                                            <div class="border rounded bg-white position-relative" style="width: 100%; height: 160px; touch-action: none; overflow: hidden;">
-                                                                                <canvas id="signature-pad" style="width: 100%; height: 100%; cursor: crosshair;"></canvas>
-                                                                                <div id="signature-placeholder" class="position-absolute top-50 start-50 translate-middle text-muted opacity-50 text-center" style="pointer-events: none; width: 90%;">
-                                                                                    <i class="ri-edit-2-line font-size-18 d-block mb-1"></i>
-                                                                                    <span class="font-size-12">Tanda tangan santri di sini</span>
+                                                                            <div class="border rounded bg-white text-center p-3 position-relative signature-clickable-box" id="box-preview-pemohon" style="min-height: 140px; cursor: pointer; border-style: dashed !important; border-width: 2px !important; border-color: #cbd5e1 !important;" onclick="openSignatureModal('pemohon')">
+                                                                                <div id="pemohon-placeholder-content" class="py-3 text-muted {{ $pemohonTtdBase64 ? 'd-none' : '' }}">
+                                                                                    <div class="avatar-xs mx-auto mb-2">
+                                                                                        <span class="avatar-title rounded-circle bg-soft-primary text-primary">
+                                                                                            <i class="ri-edit-2-line font-size-16"></i>
+                                                                                        </span>
+                                                                                    </div>
+                                                                                    <span class="fw-medium font-size-13 d-block text-dark">Klik untuk Tanda Tangan Santri</span>
+                                                                                    <small class="text-muted font-size-11">Membuka kanvas tanda tangan lega</small>
+                                                                                </div>
+                                                                                <div id="pemohon-signed-content" class="{{ empty($pemohonTtdBase64) ? 'd-none' : '' }}">
+                                                                                    <img id="img-preview-pemohon" src="{{ $pemohonTtdBase64 ?? '' }}" style="max-height: 100px; max-width: 100%; object-fit: contain;" alt="TTD Pemohon">
+                                                                                    <div class="text-success font-size-11 mt-1"><i class="ri-check-line me-1"></i>Tanda tangan tersimpan (Klik untuk ubah)</div>
                                                                                 </div>
                                                                             </div>
                                                                             <input type="hidden" name="tanda_tangan_base64" id="tanda_tangan_base64">
@@ -887,83 +894,156 @@ document.write(new Date().getFullYear())</script> © Lazimy.
                     if (canvas) {
                         var oldContent = signaturePad && !signaturePad.isEmpty() ? signaturePad.toDataURL() : null;
                         canvas.width = canvas.offsetWidth * ratio;
-                        canvas.height = canvas.offsetHeight * ratio;
-                        canvas.getContext("2d").scale(ratio, ratio);
-                        if (signaturePad) {
-                            signaturePad.clear();
-                            if (oldContent) signaturePad.fromDataURL(oldContent);
-                        }
-                    }
+    {{-- Modal Tanda Tangan Touch-Friendly untuk HP/Tablet/Desktop --}}
+    <div class="modal fade" id="modalSignature" tabindex="-1" aria-labelledby="modalSignatureLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content shadow-lg border-0">
+                <div class="modal-header bg-light py-2">
+                    <h5 class="modal-title font-size-15" id="modalSignatureLabel">
+                        <i class="ri-quill-pen-line me-1 text-primary"></i> <span id="signature-target-title">Goreskan Tanda Tangan</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted font-size-12">
+                            <i class="ri-information-line me-1"></i> Gunakan jari / stylus pen untuk tanda tangan di area putih berikut.
+                        </span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-modal-clear-signature">
+                            <i class="ri-refresh-line me-1"></i> Hapus / Bersihkan
+                        </button>
+                    </div>
 
-                    if (canvasWali) {
-                        var oldContentWali = signaturePadWali && !signaturePadWali.isEmpty() ? signaturePadWali.toDataURL() : null;
-                        canvasWali.width = canvasWali.offsetWidth * ratio;
-                        canvasWali.height = canvasWali.offsetHeight * ratio;
-                        canvasWali.getContext("2d").scale(ratio, ratio);
-                        if (signaturePadWali) {
-                            signaturePadWali.clear();
-                            if (oldContentWali) signaturePadWali.fromDataURL(oldContentWali);
-                        }
-                    }
+                    <div class="border rounded bg-white position-relative shadow-inner" style="width: 100%; height: 260px; touch-action: none; overflow: hidden; border: 2px dashed #b0bec5 !important;">
+                        <canvas id="modal-signature-canvas" style="width: 100%; height: 100%; cursor: crosshair;"></canvas>
+                        <div id="modal-signature-watermark" class="position-absolute top-50 start-50 translate-middle text-muted opacity-25 text-center" style="pointer-events: none; width: 90%;">
+                            <i class="ri-pencil-line font-size-36 d-block mb-1"></i>
+                            <span class="font-size-14 fw-bold">TANDA TANGAN DI SINI</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer py-2 bg-light d-flex justify-content-between">
+                    <button type="button" class="btn btn-secondary btn-sm px-3" data-bs-dismiss="modal">
+                        <i class="ri-close-line me-1"></i> Batal
+                    </button>
+                    <button type="button" class="btn btn-primary btn-sm px-4 fw-bold" id="btn-save-signature-modal">
+                        <i class="ri-check-line me-1"></i> Terapkan Tanda Tangan
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+            var activeSignatureTarget = null;
+            var modalSignaturePad = null;
+            var modalCanvas = null;
+
+            function openSignatureModal(target) {
+                activeSignatureTarget = target;
+                var titleText = target === 'wali' ? 'Tanda Tangan Wali / Ka. Kamar' : 'Tanda Tangan Santri (Pemohon)';
+                $('#signature-target-title').text(titleText);
+
+                var modalEl = document.getElementById('modalSignature');
+                var bsModal = new bootstrap.Modal(modalEl);
+                bsModal.show();
+            }
+
+            function resizeModalCanvas() {
+                if (!modalCanvas) return;
+                var ratio = Math.max(window.devicePixelRatio || 1, 1);
+                var width = modalCanvas.offsetWidth;
+                var height = modalCanvas.offsetHeight;
+                
+                modalCanvas.width = width * ratio;
+                modalCanvas.height = height * ratio;
+                var ctx = modalCanvas.getContext("2d");
+                ctx.scale(ratio, ratio);
+                
+                if (modalSignaturePad) {
+                    modalSignaturePad.clear();
                 }
+                $('#modal-signature-watermark').show();
+            }
 
-                if (typeof SignaturePad !== 'undefined') {
-                    // 1. Signature Pad Pemohon
-                    if (canvas) {
-                        signaturePad = new SignaturePad(canvas, {
-                            backgroundColor: 'rgba(255, 255, 255, 0)',
-                            penColor: '#002f6c',
-                            minWidth: 1.5,
-                            maxWidth: 3.5,
-                        });
-                        signaturePad.addEventListener("beginStroke", () => {
-                            $('#signature-placeholder').fadeOut(150);
-                        });
-                        $('#btn-clear-signature').on('click', function() {
-                            signaturePad.clear();
-                            $('#signature-placeholder').fadeIn(150);
-                            $('#tanda_tangan_base64').val('');
-                        });
-                    }
+            $(document).ready(function() {
+                modalCanvas = document.getElementById('modal-signature-canvas');
 
-                    // 2. Signature Pad Wali
-                    if (canvasWali) {
-                        signaturePadWali = new SignaturePad(canvasWali, {
-                            backgroundColor: 'rgba(255, 255, 255, 0)',
-                            penColor: '#002f6c',
-                            minWidth: 1.5,
-                            maxWidth: 3.5,
-                        });
-                        signaturePadWali.addEventListener("beginStroke", () => {
-                            $('#signature-placeholder-wali').fadeOut(150);
-                        });
-                        $('#btn-clear-signature-wali').on('click', function() {
-                            signaturePadWali.clear();
-                            $('#signature-placeholder-wali').fadeIn(150);
-                            $('#tanda_tangan_wali_base64').val('');
-                        });
-                    }
-
-                    // Resize canvas saat tab Jumlah Bantuan dibuka
-                    $('a[href="#tab-jumlah-bantuan"]').on('shown.bs.tab', function() {
-                        resizeCanvases();
+                if (typeof SignaturePad !== 'undefined' && modalCanvas) {
+                    modalSignaturePad = new SignaturePad(modalCanvas, {
+                        backgroundColor: 'rgba(255, 255, 255, 0)',
+                        penColor: '#002f6c',
+                        minWidth: 1.8,
+                        maxWidth: 4.0,
                     });
-                    $(window).on('resize', function() {
-                        resizeCanvases();
+
+                    modalSignaturePad.addEventListener("beginStroke", () => {
+                        $('#modal-signature-watermark').fadeOut(150);
                     });
-                    setTimeout(resizeCanvases, 300);
+
+                    $('#btn-modal-clear-signature').on('click', function() {
+                        if (modalSignaturePad) {
+                            modalSignaturePad.clear();
+                            $('#modal-signature-watermark').fadeIn(150);
+                        }
+                    });
+
+                    var modalEl = document.getElementById('modalSignature');
+                    modalEl.addEventListener('shown.bs.modal', function () {
+                        resizeModalCanvas();
+                    });
+
+                    // Terapkan TTD dari Modal
+                    $('#btn-save-signature-modal').on('click', function() {
+                        if (!modalSignaturePad || modalSignaturePad.isEmpty()) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Belum Ada Coretan',
+                                text: 'Silakan tanda tangan terlebih dahulu sebelum menerapkan.',
+                                confirmButtonColor: '#0d6efd'
+                            });
+                            return;
+                        }
+
+                        var base64Data = modalSignaturePad.toDataURL('image/png');
+
+                        if (activeSignatureTarget === 'wali') {
+                            $('#tanda_tangan_wali_base64').val(base64Data);
+                            $('#img-preview-wali').attr('src', base64Data);
+                            $('#wali-placeholder-content').addClass('d-none');
+                            $('#wali-signed-content').removeClass('d-none');
+                            $('#btn-reset-preview-wali').removeClass('d-none');
+                        } else if (activeSignatureTarget === 'pemohon') {
+                            $('#tanda_tangan_base64').val(base64Data);
+                            $('#img-preview-pemohon').attr('src', base64Data);
+                            $('#pemohon-placeholder-content').addClass('d-none');
+                            $('#pemohon-signed-content').removeClass('d-none');
+                            $('#btn-reset-preview-pemohon').removeClass('d-none');
+                        }
+
+                        bootstrap.Modal.getInstance(modalEl).hide();
+                    });
+
+                    // Reset Preview Tombol Hapus Wali
+                    $('#btn-reset-preview-wali').on('click', function(e) {
+                        e.stopPropagation();
+                        $('#tanda_tangan_wali_base64').val('REMOVE');
+                        $('#img-preview-wali').attr('src', '');
+                        $('#wali-signed-content').addClass('d-none');
+                        $('#wali-placeholder-content').removeClass('d-none');
+                        $(this).addClass('d-none');
+                    });
+
+                    // Reset Preview Tombol Hapus Pemohon
+                    $('#btn-reset-preview-pemohon').on('click', function(e) {
+                        e.stopPropagation();
+                        $('#tanda_tangan_base64').val('REMOVE');
+                        $('#img-preview-pemohon').attr('src', '');
+                        $('#pemohon-signed-content').addClass('d-none');
+                        $('#pemohon-placeholder-content').removeClass('d-none');
+                        $(this).addClass('d-none');
+                    });
                 }
-
-                // Saat form submit, simpan dataURL jika ada goresan baru
-                $('form').on('submit', function() {
-                    if (signaturePad && !signaturePad.isEmpty()) {
-                        $('#tanda_tangan_base64').val(signaturePad.toDataURL('image/png'));
-                    }
-                    if (signaturePadWali && !signaturePadWali.isEmpty()) {
-                        $('#tanda_tangan_wali_base64').val(signaturePadWali.toDataURL('image/png'));
-                    }
-                });
-
             });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.1.7/dist/signature_pad.umd.min.js"></script>
