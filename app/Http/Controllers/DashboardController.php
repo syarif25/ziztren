@@ -18,15 +18,15 @@ class DashboardController extends Controller
         $periodes = MasterPeriode::orderBy('tahun_masehi', 'desc')->orderBy('gelombang', 'asc')->get();
         $activePeriode = MasterPeriode::where('status', 'aktif')->first();
 
-        // Base query with optional filter
-        $query = PengajuanBeasiswa::query();
+        // Base query with optional filter (scoped per gender jika operator)
+        $query = PengajuanBeasiswa::forUser();
         if ($periodeId && $periodeId !== 'all') {
             $query->where('periode_id', $periodeId);
         }
 
         // 1. KPI Counts
         $totalPengajuan = (clone $query)->count();
-        $totalSantri = Santri::count();
+        $totalSantri = Santri::forUser()->count();
 
         $countDraft = (clone $query)->where('status_pengajuan', 'draft')->count();
         $countProses = (clone $query)->where('status_pengajuan', 'proses')->count();
@@ -64,7 +64,7 @@ class DashboardController extends Controller
 
         $komponenList = [
             [
-                'nama' => 'UTAP (Uang Tahunan Pondok)',
+                'nama' => 'UTAP (Uang Tahunan Pesantren)',
                 'nominal' => (float) ($komponenBiaya->utap ?? 0),
                 'persen' => $totalDanaUsulan > 0 ? round((($komponenBiaya->utap ?? 0) / $totalDanaUsulan) * 100, 1) : 0,
                 'color' => '#0f9cf3',

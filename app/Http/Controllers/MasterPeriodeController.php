@@ -104,12 +104,24 @@ class MasterPeriodeController extends Controller
     {
         $periode = MasterPeriode::where('status', 'aktif')->first();
         if ($periode) {
+            $today = Carbon::now()->format('Y-m-d');
+            $tglBuka = $periode->tgl_buka;
+            $tglTutup = $periode->tgl_tutup;
+
+            $isOpen = ($today >= $tglBuka && $today <= $tglTutup);
+            $isExpired = ($today > $tglTutup);
+            $isUpcoming = ($today < $tglBuka);
+
             return response()->json([
                 'success' => true,
                 'data' => [
                     'gelombang' => $periode->gelombang,
-                    'tgl_buka' => Carbon::parse($periode->tgl_buka)->format('d M Y'),
-                    'tgl_tutup' => Carbon::parse($periode->tgl_tutup)->format('d M Y'),
+                    'tahun_masehi' => $periode->tahun_masehi,
+                    'tgl_buka' => Carbon::parse($tglBuka)->format('d M Y'),
+                    'tgl_tutup' => Carbon::parse($tglTutup)->format('d M Y'),
+                    'is_open' => $isOpen,
+                    'is_expired' => $isExpired,
+                    'is_upcoming' => $isUpcoming,
                 ]
             ]);
         }

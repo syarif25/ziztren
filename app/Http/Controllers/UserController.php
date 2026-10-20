@@ -50,7 +50,7 @@ class UserController extends Controller
         $request->validate([
             'username' => 'required|string|max:100|unique:users',
             'password' => 'required|string|min:6',
-            'level' => 'required|in:admin,operator',
+            'level' => 'required|in:admin,operator_putra,operator_putri',
         ]);
 
         try {
@@ -84,7 +84,7 @@ class UserController extends Controller
 
         $rules = [
             'username' => 'required|string|max:100|unique:users,username,' . $id,
-            'level' => 'required|in:admin,operator',
+            'level' => 'required|in:admin,operator_putra,operator_putri',
         ];
 
         if ($request->filled('password')) {

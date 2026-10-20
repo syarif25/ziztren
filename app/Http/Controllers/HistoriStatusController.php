@@ -15,7 +15,9 @@ class HistoriStatusController extends Controller
 
     public function data()
     {
-        $histori = HistoriStatusBeasiswa::with('pengajuan.santri')->select('histori_status_beasiswas.*');
+        $histori = HistoriStatusBeasiswa::whereHas('pengajuan', function ($q) {
+            $q->forUser();
+        })->with('pengajuan.santri')->select('histori_status_beasiswas.*');
 
         return DataTables::of($histori)
             ->addIndexColumn()

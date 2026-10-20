@@ -63,8 +63,9 @@
                             <label for="level" class="form-label">Level</label>
                             <select class="form-select" id="level" name="level" required>
                                 <option value="">Pilih Level...</option>
-                                <option value="admin">Admin</option>
-                                <option value="operator">Operator</option>
+                                <option value="admin">Admin (Semua Akses & Master)</option>
+                                <option value="operator_putra">Operator Putra (Khusus Santri Putra)</option>
+                                <option value="operator_putri">Operator Putri (Khusus Santri Putri)</option>
                             </select>
                         </div>
                     </form>

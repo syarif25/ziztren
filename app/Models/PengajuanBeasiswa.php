@@ -34,6 +34,8 @@ class PengajuanBeasiswa extends Model
         'prestasi_qiroati',
         'prestasi_madrasah',
         'prestasi_sekolah',
+        'tanda_tangan',
+        'tanda_tangan_wali',
     ];
 
     public function santri()
@@ -69,5 +71,54 @@ class PengajuanBeasiswa extends Model
     public function historiStatus()
     {
         return $this->hasMany(HistoriStatusBeasiswa::class, 'pengajuan_id')->orderBy('created_at', 'desc');
+    }
+
+    public function pencairans()
+    {
+        return $this->hasMany(PencairanBeasiswa::class, 'pengajuan_id')->orderBy('tanggal_cair', 'desc')->orderBy('id', 'desc');
+    }
+
+    public function getTotalBantuanAttribute()
+    {
+        return (float) ($this->jumlah_utap ?? 0)
+            + (float) ($this->spp_gasal ?? 0)
+            + (float) ($this->spp_genap ?? 0)
+            + (float) ($this->living_cost ?? 0)
+            + (float) ($this->biaya_lain ?? 0);
+    }
+
+    public function getTotalDicairkanAttribute()
+    {
+        return (float) $this->pencairans()->sum('nominal');
+    }
+
+    public function getSisaPencairanAttribute()
+    {
+        return max(0, $this->total_bantuan - $this->total_dicairkan);
+    }
+
+    public function getProgressPencairanAttribute()
+    {
+        $total = $this->total_bantuan;
+        if ($total <= 0) return 0;
+        return min(100, round(($this->total_dicairkan / $total) * 100));
+    }
+
+    /**
+     * Scope query otomatis berdasarkan gender role operator (Putra / Putri)
+     */
+    public function scopeForUser($query, $user = null)
+    {
+        $user = $user ?: auth()->user();
+        if (!$user) return $query;
+
+        $genderScope = $user->getGenderScope();
+        if ($genderScope) {
+            return $query->whereHas('santri', function ($q) use ($genderScope) {
+                $q->where('jenis_kelamin', $genderScope);
+            });
+        }
+
+        return $query;
     }
 }

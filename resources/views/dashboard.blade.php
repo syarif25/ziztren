@@ -42,7 +42,7 @@
 @endpush
 
 @section('breadcrumb')
-    <li class="breadcrumb-item"><a href="javascript: void(0);">ZIZTREN</a></li>
+    <li class="breadcrumb-item"><a href="javascript: void(0);">LAZIMY</a></li>
     <li class="breadcrumb-item active">Dashboard</li>
 @endsection
 
@@ -50,7 +50,7 @@
     {{-- Top Filter & Periode Bar --}}
     <div class="row align-items-center mb-3">
         <div class="col-md-7">
-            <h4 class="font-size-18 text-dark fw-bold mb-1">Pengelolaan & Penyaluran Beasiswa</h4>
+            <h4 class="font-size-18 text-dark fw-bold mb-1">Beasiswa Lazimy</h4>
             <p class="text-muted font-size-13 mb-0">
                 Pondok Pesantren Salafiyah Syafi'iyah Sukorejo 
             </p>
@@ -138,11 +138,8 @@
             <div class="card metric-card border-info-left h-100 mb-0">
                 <div class="card-body p-3">
                     <div class="text-muted text-uppercase font-size-12 fw-semibold">Disetujui (ACC Bendahara)</div>
-                    <h3 class="fw-bold text-dark my-2">Rp {{ number_format($totalDanaAcc, 0, ',', '.') }}</h3>
-                    <div class="d-flex justify-content-between align-items-center font-size-12 text-muted">
-                        <span>Berkas disetujui:</span>
-                        <span class="fw-semibold text-primary">{{ $countAcc + $countPencairan }} berkas</span>
-                    </div>
+                    <h3 class="fw-bold text-dark my-2">{{ number_format($countAcc + $countPencairan, 0, ',', '.') }} <span class="font-size-14 text-muted fw-normal">Berkas</span></h3>
+                    
                 </div>
             </div>
         </div>
@@ -217,7 +214,7 @@
         <div class="col-xl-6">
             <div class="card h-100 mb-0">
                 <div class="card-header bg-transparent py-2 border-bottom d-flex justify-content-between align-items-center">
-                    <span class="fw-bold text-dark font-size-13"><i class="ri-money-cny-box-line me-1 text-success"></i> Alokasi Komponen Pembiayaan</span>
+                    <span class="fw-bold text-dark font-size-13"><i class="ri-money-cny-box-line me-1 text-success"></i> Komponen Pembiayaan</span>
                     <span class="font-size-12 text-muted">Total: <strong class="text-dark">Rp {{ number_format($totalDanaUsulan, 0, ',', '.') }}</strong></span>
                 </div>
                 <div class="card-body p-3">

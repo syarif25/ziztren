@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'eregistrasi' => [
+        'url' => env('EREGISTRASI_API_URL', 'https://beeregistrasiv2.p2s3.com/api/v1'),
+        'service_key' => env('EREGISTRASI_SERVICE_KEY'),
+        'token' => env('EREGISTRASI_API_TOKEN', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiaW50ZWdyYXRpb24iLCJpYXQiOjE3ODYyNDM1MDMsImV4cCI6MjEwMTgxOTUwM30.q2pHLV3XIDK5959WvmmUg1C5LreQm1NlGU8sU-c4LVo'),
+    ],
+
 ];

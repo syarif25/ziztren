@@ -14,32 +14,38 @@ Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\DashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('pengguna/data', [UserController::class, 'data'])->name('pengguna.data');
-    Route::resource('pengguna', UserController::class);
-
-    Route::get('master-periode/data', [App\Http\Controllers\MasterPeriodeController::class, 'data'])->name('master-periode.data');
     Route::get('master-periode/active-info', [App\Http\Controllers\MasterPeriodeController::class, 'activeInfo'])->name('master-periode.active-info');
-    Route::resource('master-periode', App\Http\Controllers\MasterPeriodeController::class)->except(['create', 'show', 'destroy']);
 
-    Route::get('lembaga/data', [App\Http\Controllers\LembagaController::class, 'data'])->name('lembaga.data');
-    Route::resource('lembaga', App\Http\Controllers\LembagaController::class);
+    // ==========================================
+    // MENU KHUSUS ADMIN (MASTER DATA & PENGGUNA)
+    // ==========================================
+    Route::middleware('admin')->group(function () {
+        Route::get('pengguna/data', [UserController::class, 'data'])->name('pengguna.data');
+        Route::resource('pengguna', UserController::class);
 
-    Route::get('kota/data', [App\Http\Controllers\KotaController::class, 'data'])->name('kota.data');
-    Route::get('/kota', [App\Http\Controllers\KotaController::class, 'index'])->name('kota.index');
+        Route::get('master-periode/data', [App\Http\Controllers\MasterPeriodeController::class, 'data'])->name('master-periode.data');
+        Route::resource('master-periode', App\Http\Controllers\MasterPeriodeController::class)->except(['create', 'show', 'destroy']);
 
-    Route::get('provinsi/data', [App\Http\Controllers\ProvinsiController::class, 'data'])->name('provinsi.data');
-    Route::get('/provinsi', [App\Http\Controllers\ProvinsiController::class, 'index'])->name('provinsi.index');
+        Route::get('lembaga/data', [App\Http\Controllers\LembagaController::class, 'data'])->name('lembaga.data');
+        Route::post('lembaga/sync', [App\Http\Controllers\LembagaController::class, 'syncFromEregistrasi'])->name('lembaga.sync');
+        Route::resource('lembaga', App\Http\Controllers\LembagaController::class);
 
-    Route::get('kecamatan/data', [App\Http\Controllers\KecamatanController::class, 'data'])->name('kecamatan.data');
-    Route::get('/kecamatan', [App\Http\Controllers\KecamatanController::class, 'index'])->name('kecamatan.index');
+        Route::get('kota/data', [App\Http\Controllers\KotaController::class, 'data'])->name('kota.data');
+        Route::get('/kota', [App\Http\Controllers\KotaController::class, 'index'])->name('kota.index');
 
-    Route::get('desa/data', [App\Http\Controllers\DesaController::class, 'data'])->name('desa.data');
-    Route::get('/desa', [App\Http\Controllers\DesaController::class, 'index'])->name('desa.index');
+        Route::get('provinsi/data', [App\Http\Controllers\ProvinsiController::class, 'data'])->name('provinsi.data');
+        Route::get('/provinsi', [App\Http\Controllers\ProvinsiController::class, 'index'])->name('provinsi.index');
 
-    Route::get('/santri', [App\Http\Controllers\SantriController::class, 'index'])->name('santri.index');
-    Route::get('santri/data', [App\Http\Controllers\SantriController::class, 'data'])->name('santri.data');
-    Route::post('santri/sync', [App\Http\Controllers\SantriController::class, 'sync'])->name('santri.sync');
+        Route::get('kecamatan/data', [App\Http\Controllers\KecamatanController::class, 'data'])->name('kecamatan.data');
+        Route::get('/kecamatan', [App\Http\Controllers\KecamatanController::class, 'index'])->name('kecamatan.index');
+
+        Route::get('desa/data', [App\Http\Controllers\DesaController::class, 'data'])->name('desa.data');
+        Route::get('/desa', [App\Http\Controllers\DesaController::class, 'index'])->name('desa.index');
+
+        Route::get('/santri', [App\Http\Controllers\SantriController::class, 'index'])->name('santri.index');
+        Route::get('santri/data', [App\Http\Controllers\SantriController::class, 'data'])->name('santri.data');
+        Route::post('santri/sync', [App\Http\Controllers\SantriController::class, 'sync'])->name('santri.sync');
+    });
 
     Route::get('/beasiswa', [App\Http\Controllers\BeasiswaController::class, 'index'])->name('beasiswa.index');
     Route::get('/beasiswa/create', [App\Http\Controllers\BeasiswaController::class, 'create'])->name('beasiswa.create');
@@ -69,6 +75,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan/summary', [App\Http\Controllers\LaporanController::class, 'summary'])->name('laporan.summary');
     Route::get('/laporan/export-excel', [App\Http\Controllers\LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
     Route::get('/laporan/cetak-pdf', [App\Http\Controllers\LaporanController::class, 'cetakPdf'])->name('laporan.cetak.pdf');
+
+    // Pencairan & Penyaluran Dana (Transfer & Tunai Bertahap)
+    Route::get('/pencairan', [App\Http\Controllers\PencairanController::class, 'index'])->name('pencairan.index');
+    Route::get('/pencairan/data', [App\Http\Controllers\PencairanController::class, 'data'])->name('pencairan.data');
+    Route::get('/pencairan/info/{id}', [App\Http\Controllers\PencairanController::class, 'getInfo'])->name('pencairan.info');
+    Route::get('/pencairan/show/{id}', [App\Http\Controllers\PencairanController::class, 'show'])->name('pencairan.show');
+    Route::post('/pencairan/store', [App\Http\Controllers\PencairanController::class, 'store'])->name('pencairan.store');
+    Route::delete('/pencairan/{id}', [App\Http\Controllers\PencairanController::class, 'destroy'])->name('pencairan.destroy');
+    Route::get('/pencairan/kuitansi/{id}', [App\Http\Controllers\PencairanController::class, 'cetakKuitansi'])->name('pencairan.kuitansi');
+    Route::get('/pencairan/riwayat-pdf/{id}', [App\Http\Controllers\PencairanController::class, 'cetakRiwayatPdf'])->name('pencairan.cetak-riwayat');
 
     // Region APIs
     Route::get('/api/regions/provinsi', [App\Http\Controllers\RegionController::class, 'getProvinsi']);

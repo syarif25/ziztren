@@ -29,4 +29,33 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function isAdmin(): bool
+    {
+        return $this->level === 'admin';
+    }
+
+    public function isOperatorPutra(): bool
+    {
+        return $this->level === 'operator_putra';
+    }
+
+    public function isOperatorPutri(): bool
+    {
+        return $this->level === 'operator_putri';
+    }
+
+    /**
+     * Mengembalikan 'L', 'P', atau null (jika admin bisa semua)
+     */
+    public function getGenderScope(): ?string
+    {
+        if ($this->level === 'operator_putra') {
+            return 'L';
+        }
+        if ($this->level === 'operator_putri') {
+            return 'P';
+        }
+        return null;
+    }
 }

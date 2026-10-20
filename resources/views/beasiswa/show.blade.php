@@ -201,7 +201,7 @@
                                         <p class="mb-0 text-truncate fw-medium">{{ $doc->jenis_dokumen }}</p>
                                         <small class="text-muted">{{ number_format($doc->file_size / 1024, 2) }} KB</small>
                                     </div>
-                                    <a href="{{ Storage::url($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <a href="{{ route('dokumen.lihat', $doc->id) }}" target="_blank" class="btn btn-sm btn-outline-primary" title="Lihat Dokumen">
                                         <i class="ri-eye-line"></i>
                                     </a>
                                 </div>

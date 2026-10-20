@@ -391,15 +391,40 @@
             <td style="text-align: left; padding-left: 20px;">
                 Mengetahui,<br>
                 Wali / Ka. Kamar
-                <br><br><br><br>
+                <div style="height: 52px; margin: 3px 0;">
+                    @php
+                        $ttdWaliPath = $pengajuan->tanda_tangan_wali ? storage_path('app/public/' . $pengajuan->tanda_tangan_wali) : null;
+                        $ttdWaliBase64 = '';
+                        if ($ttdWaliPath && file_exists($ttdWaliPath)) {
+                            $ttdWaliBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($ttdWaliPath));
+                        }
+                    @endphp
+                    @if($ttdWaliBase64)
+                        <img src="{{ $ttdWaliBase64 }}" style="height: 50px; width: auto; max-width: 150px; vertical-align: middle;">
+                    @else
+                        <br><br>
+                    @endif
+                </div>
                 <strong><u>{{ !empty($pengajuan->santri->nama_wali) ? $pengajuan->santri->nama_wali : '..................................................' }}</u></strong>
             </td>
             <td style="text-align: right; padding-right: 20px;">
                 Sukorejo, {{ $pengajuan->created_at ? \Carbon\Carbon::parse($pengajuan->created_at)->locale('id')->translatedFormat('d F Y') : date('d F Y') }}<br>
                 Pemohon,
-                <br><br><br><br>
+                <div style="height: 52px; margin: 3px 0;">
+                    @php
+                        $ttdPath = $pengajuan->tanda_tangan ? storage_path('app/public/' . $pengajuan->tanda_tangan) : null;
+                        $ttdBase64 = '';
+                        if ($ttdPath && file_exists($ttdPath)) {
+                            $ttdBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($ttdPath));
+                        }
+                    @endphp
+                    @if($ttdBase64)
+                        <img src="{{ $ttdBase64 }}" style="height: 50px; width: auto; max-width: 150px; vertical-align: middle;">
+                    @else
+                        <br><br>
+                    @endif
+                </div>
                 <strong><u>{{ !empty($pengajuan->santri->nama_lengkap) ? $pengajuan->santri->nama_lengkap : '..................................................' }}</u></strong><br>
-               
             </td>
         </tr>
     </table>

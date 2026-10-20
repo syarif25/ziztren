@@ -70,4 +70,20 @@ class Santri extends Model
     {
         return $this->belongsTo(\Laravolt\Indonesia\Models\Village::class, 'desa_id');
     }
+
+    /**
+     * Scope query santri berdasarkan gender role operator (Putra / Putri)
+     */
+    public function scopeForUser($query, $user = null)
+    {
+        $user = $user ?: auth()->user();
+        if (!$user) return $query;
+
+        $genderScope = $user->getGenderScope();
+        if ($genderScope) {
+            return $query->where('jenis_kelamin', $genderScope);
+        }
+
+        return $query;
+    }
 }

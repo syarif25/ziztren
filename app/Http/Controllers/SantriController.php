@@ -42,16 +42,24 @@ class SantriController extends Controller
      */
     public function sync()
     {
-        // Bearer token from the documentation
-        $token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiaW50ZWdyYXRpb24iLCJpYXQiOjE3ODYyNDM1MDMsImV4cCI6MjEwMTgxOTUwM30.q2pHLV3XIDK5959WvmmUg1C5LreQm1NlGU8sU-c4LVo';
-        $baseUrl = 'https://beeregistrasiv2.p2s3.com/api/v1/integration/siswa';
+        $token = config('services.eregistrasi.token');
+        $baseUrl = rtrim(config('services.eregistrasi.url', 'https://beeregistrasiv2.p2s3.com/api/v1'), '/') . '/integration/siswa';
+
+        if (!$token) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Token API e-Registrasi (EREGISTRASI_API_TOKEN) belum dikonfigurasi di file .env.'
+            ], 400);
+        }
 
         try {
             $limit = 1000;
             $page = 1;
+            $totalSynced = 0;
+            $now = now();
             
             do {
-                $response = Http::withToken($token)->get($baseUrl, [
+                $response = Http::timeout(30)->withToken($token)->get($baseUrl, [
                     'page' => $page,
                     'limit' => $limit,
                 ]);
@@ -65,21 +73,34 @@ class SantriController extends Controller
 
                 $responseData = $response->json();
                 
-                if (!$responseData['success']) {
+                if (!isset($responseData['success']) || !$responseData['success']) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'API Error: ' . $responseData['message']
+                        'message' => 'API Error: ' . ($responseData['message'] ?? 'Respon tidak valid')
                     ], 500);
                 }
 
-                $payload = $responseData['data'];
+                $payload = $responseData['data'] ?? [];
                 $santriList = $payload['siswa'] ?? [];
                 
-                foreach ($santriList as $item) {
-                    Santri::updateOrCreate(
-                        ['nis' => $item['nis']],
-                        ['nama_lengkap' => $item['nama_lengkap']]
-                    );
+                if (!empty($santriList)) {
+                    $batch = [];
+                    foreach ($santriList as $item) {
+                        if (!empty($item['nis'])) {
+                            $batch[] = [
+                                'nis' => $item['nis'],
+                                'nama_lengkap' => $item['nama_lengkap'] ?? '-',
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
+                    }
+
+                    // Bulk Upsert per batch 500/1000 record dalam 1 query SQL
+                    if (!empty($batch)) {
+                        Santri::upsert($batch, ['nis'], ['nama_lengkap', 'updated_at']);
+                        $totalSynced += count($batch);
+                    }
                 }
 
                 $totalPages = $payload['total_pages'] ?? 1;
@@ -89,7 +110,8 @@ class SantriController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'Data santri berhasil disinkronisasi.'
+                'message' => 'Data santri berhasil disinkronisasi. Total: ' . number_format($totalSynced, 0, ',', '.') . ' santri.',
+                'total' => $totalSynced,
             ]);
 
         } catch (\Exception $e) {

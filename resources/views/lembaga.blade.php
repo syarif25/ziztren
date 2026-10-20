@@ -15,7 +15,14 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="card-title m-0">Daftar Lembaga</h4>
-                        <button class="btn btn-primary btn-sm" id="btn-tambah"><i class="ri-add-line align-middle me-1"></i> Tambah Lembaga</button>
+                        <div>
+                            <button class="btn btn-success btn-sm me-1" id="btn-sync-eregistrasi">
+                                <i class="ri-refresh-line align-middle me-1"></i> Tarik Data dari e-Registrasi
+                            </button>
+                            <button class="btn btn-primary btn-sm" id="btn-tambah">
+                                <i class="ri-add-line align-middle me-1"></i> Tambah Lembaga
+                            </button>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table id="table-lembaga" class="table table-bordered dt-responsive nowrap" style="border-collapse: collapse; border-spacing: 0; width: 100%;">
@@ -25,7 +32,6 @@
                                     <th>Nama Lembaga</th>
                                     <th>Singkatan</th>
                                     <th>Bidang</th>
-                                    <th>Jenis Lembaga</th>
                                     <th width="10%">Aksi</th>
                                 </tr>
                             </thead>
@@ -66,15 +72,6 @@
                             <input type="text" class="form-control" id="bidang" name="bidang" maxlength="100">
                             <div class="invalid-feedback"></div>
                         </div>
-                        <div class="mb-3">
-                            <label for="jenis_lembaga" class="form-label">Jenis Lembaga <span class="text-danger">*</span></label>
-                            <select class="form-select" id="jenis_lembaga" name="jenis_lembaga" required>
-                                <option value="">-- Pilih Jenis --</option>
-                                <option value="pagi">Pagi</option>
-                                <option value="sore">Sore</option>
-                            </select>
-                            <div class="invalid-feedback"></div>
-                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-light waves-effect" data-bs-dismiss="modal">Batal</button>
@@ -102,15 +99,44 @@
                     {data: 'nama_lembaga', name: 'nama_lembaga'},
                     {data: 'kode_lembaga', name: 'kode_lembaga'},
                     {data: 'bidang', name: 'bidang'},
-                    {
-                        data: 'jenis_lembaga',
-                        name: 'jenis_lembaga',
-                        render: function(data) {
-                            return data.charAt(0).toUpperCase() + data.slice(1);
-                        }
-                    },
                     {data: 'aksi', name: 'aksi', orderable: false, searchable: false},
                 ]
+            });
+
+            // Sinkronisasi Lembaga dari e-Registrasi
+            $('#btn-sync-eregistrasi').on('click', function() {
+                Swal.fire({
+                    title: 'Tarik Data dari e-Registrasi?',
+                    text: 'Sistem akan menyinkronkan daftar lembaga resmi secara otomatis dari e-Registrasi VPS.',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="ri-refresh-line me-1"></i> Ya, Sinkronkan',
+                    cancelButtonText: 'Batal',
+                    showLoaderOnConfirm: true,
+                    preConfirm: () => {
+                        return $.ajax({
+                            url: "{{ route('lembaga.sync') }}",
+                            type: 'POST',
+                            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                        }).catch(error => {
+                            let msg = error.responseJSON?.message || 'Gagal menyinkronkan data dari e-Registrasi.';
+                            Swal.showValidationMessage(msg);
+                        });
+                    },
+                    allowOutsideClick: () => !Swal.isLoading()
+                }).then((result) => {
+                    if (result.isConfirmed && result.value?.success) {
+                        table.ajax.reload();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sinkronisasi Berhasil!',
+                            text: result.value.message,
+                            confirmButtonColor: '#28a745'
+                        });
+                    }
+                });
             });
 
             $('#btn-tambah').click(function() {
@@ -130,7 +156,6 @@
                     $('#kode_lembaga').val(data.kode_lembaga);
                     $('#nama_lembaga').val(data.nama_lembaga);
                     $('#bidang').val(data.bidang);
-                    $('#jenis_lembaga').val(data.jenis_lembaga);
                     $('#modal-lembaga').modal('show');
                 });
             });

@@ -22,7 +22,7 @@ class BeasiswaController extends Controller
 
     public function data()
     {
-        $pengajuan = PengajuanBeasiswa::with(['santri', 'lembaga1', 'lembaga2', 'periode'])->select('pengajuan_beasiswas.*');
+        $pengajuan = PengajuanBeasiswa::forUser()->with(['santri', 'lembaga1', 'lembaga2', 'periode'])->select('pengajuan_beasiswas.*');
 
         return DataTables::of($pengajuan)
             ->addIndexColumn()
@@ -124,7 +124,7 @@ class BeasiswaController extends Controller
 
     public function getSantriDetail($nis)
     {
-        $santri = Santri::where('nis', $nis)->first();
+        $santri = Santri::forUser()->where('nis', $nis)->first();
         if ($santri) {
             return response()->json($santri);
         }
@@ -134,11 +134,13 @@ class BeasiswaController extends Controller
     public function searchSantri(Request $request)
     {
         $search = $request->q;
-        $query = Santri::orderBy('nama_lengkap', 'asc');
+        $query = Santri::forUser()->orderBy('nama_lengkap', 'asc');
 
         if ($search) {
-            $query->where('nama_lengkap', 'like', "%{$search}%")
+            $query->where(function($q) use ($search) {
+                $q->where('nama_lengkap', 'like', "%{$search}%")
                   ->orWhere('nis', 'like', "%{$search}%");
+            });
         }
 
         $santris = $query->limit(50)->get();
@@ -253,6 +255,36 @@ class BeasiswaController extends Controller
                 'tanggal_bantuan' => date('Y-m-d'),
             ]);
 
+            // Handle tanda tangan digital Base64 Pemohon (Limit max 500KB string)
+            if ($request->filled('tanda_tangan_base64') && strlen($request->tanda_tangan_base64) <= 500000) {
+                $base64Image = $request->tanda_tangan_base64;
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
+                    $type = strtolower($type[1]); // png
+                    $imageBinary = base64_decode($base64Image);
+                    if ($imageBinary !== false) {
+                        $ttdFilename = 'tanda_tangan/ttd_' . $pengajuan->nis . '_' . time() . '.' . $type;
+                        Storage::disk('public')->put($ttdFilename, $imageBinary);
+                        $pengajuan->update(['tanda_tangan' => $ttdFilename]);
+                    }
+                }
+            }
+
+            // Handle tanda tangan digital Base64 Wali (Limit max 500KB string)
+            if ($request->filled('tanda_tangan_wali_base64') && strlen($request->tanda_tangan_wali_base64) <= 500000) {
+                $base64ImageWali = $request->tanda_tangan_wali_base64;
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64ImageWali, $typeWali)) {
+                    $base64ImageWali = substr($base64ImageWali, strpos($base64ImageWali, ',') + 1);
+                    $typeWali = strtolower($typeWali[1]); // png
+                    $imageBinaryWali = base64_decode($base64ImageWali);
+                    if ($imageBinaryWali !== false) {
+                        $ttdWaliFilename = 'tanda_tangan/ttd_wali_' . $pengajuan->nis . '_' . time() . '.' . $typeWali;
+                        Storage::disk('public')->put($ttdWaliFilename, $imageBinaryWali);
+                        $pengajuan->update(['tanda_tangan_wali' => $ttdWaliFilename]);
+                    }
+                }
+            }
+
             // Handle file uploads
             if ($request->has('dokumen')) {
                 $year = date('Y');
@@ -293,7 +325,7 @@ class BeasiswaController extends Controller
 
     public function show($id)
     {
-        $pengajuan = PengajuanBeasiswa::with([
+        $pengajuan = PengajuanBeasiswa::forUser()->with([
             'santri', 'dokumen', 'periode', 
             'lembaga1', 'lembaga2', 'lembagaQiroati',
             'santri.provinsi', 'santri.kabupaten', 'santri.kecamatan', 'santri.desa'
@@ -304,7 +336,7 @@ class BeasiswaController extends Controller
 
     public function edit($id)
     {
-        $pengajuan = PengajuanBeasiswa::with(['santri', 'dokumen'])->findOrFail($id);
+        $pengajuan = PengajuanBeasiswa::forUser()->with(['santri', 'dokumen'])->findOrFail($id);
         $periode = MasterPeriode::where('status', 'aktif')->first();
 
         // Data for dropdowns
@@ -315,6 +347,7 @@ class BeasiswaController extends Controller
 
     public function update(Request $request, $id)
     {
+        $pengajuan = PengajuanBeasiswa::forUser()->findOrFail($id);
         // Remove dot separators
                 $request->merge([
             'jumlah_utap' => str_replace('.', '', $request->jumlah_utap ?? 0) ?: 0,
@@ -412,6 +445,44 @@ class BeasiswaController extends Controller
             }
             
             $pengajuan->update($updateData);
+
+            // Handle update tanda tangan digital Base64 Pemohon (Limit max 500KB string)
+            if ($request->filled('tanda_tangan_base64') && strlen($request->tanda_tangan_base64) <= 500000) {
+                $base64Image = $request->tanda_tangan_base64;
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
+                    $type = strtolower($type[1]); // png
+                    $imageBinary = base64_decode($base64Image);
+                    if ($imageBinary !== false) {
+                        // Hapus file tanda tangan lama jika ada
+                        if ($pengajuan->tanda_tangan && Storage::disk('public')->exists($pengajuan->tanda_tangan)) {
+                            Storage::disk('public')->delete($pengajuan->tanda_tangan);
+                        }
+                        $ttdFilename = 'tanda_tangan/ttd_' . $pengajuan->nis . '_' . time() . '.' . $type;
+                        Storage::disk('public')->put($ttdFilename, $imageBinary);
+                        $pengajuan->update(['tanda_tangan' => $ttdFilename]);
+                    }
+                }
+            }
+
+            // Handle update tanda tangan digital Base64 Wali (Limit max 500KB string)
+            if ($request->filled('tanda_tangan_wali_base64') && strlen($request->tanda_tangan_wali_base64) <= 500000) {
+                $base64ImageWali = $request->tanda_tangan_wali_base64;
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64ImageWali, $typeWali)) {
+                    $base64ImageWali = substr($base64ImageWali, strpos($base64ImageWali, ',') + 1);
+                    $typeWali = strtolower($typeWali[1]); // png
+                    $imageBinaryWali = base64_decode($base64ImageWali);
+                    if ($imageBinaryWali !== false) {
+                        // Hapus file tanda tangan wali lama jika ada
+                        if ($pengajuan->tanda_tangan_wali && Storage::disk('public')->exists($pengajuan->tanda_tangan_wali)) {
+                            Storage::disk('public')->delete($pengajuan->tanda_tangan_wali);
+                        }
+                        $ttdWaliFilename = 'tanda_tangan/ttd_wali_' . $pengajuan->nis . '_' . time() . '.' . $typeWali;
+                        Storage::disk('public')->put($ttdWaliFilename, $imageBinaryWali);
+                        $pengajuan->update(['tanda_tangan_wali' => $ttdWaliFilename]);
+                    }
+                }
+            }
 
             // Handle file uploads during edit
             if ($request->has('dokumen')) {
@@ -533,7 +604,7 @@ class BeasiswaController extends Controller
             'catatan' => 'nullable|string'
         ]);
 
-        $pengajuan = PengajuanBeasiswa::findOrFail($id);
+        $pengajuan = PengajuanBeasiswa::forUser()->findOrFail($id);
 
         DB::beginTransaction();
         try {
@@ -561,7 +632,7 @@ class BeasiswaController extends Controller
 
     public function cetakPdf($id)
     {
-        $pengajuan = PengajuanBeasiswa::with(['santri.provinsi', 'santri.kabupaten', 'santri.kecamatan', 'santri.desa', 'lembaga1', 'lembaga2', 'lembagaQiroati', 'periode', 'dokumen'])->findOrFail($id);
+        $pengajuan = PengajuanBeasiswa::forUser()->with(['santri.provinsi', 'santri.kabupaten', 'santri.kecamatan', 'santri.desa', 'lembaga1', 'lembaga2', 'lembagaQiroati', 'periode', 'dokumen'])->findOrFail($id);
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('beasiswa.pdf', compact('pengajuan'));
         $pdf->setPaper('A4', 'portrait');
         return $pdf->stream('Form_Pengajuan_' . $pengajuan->nis . '.pdf');

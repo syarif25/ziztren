@@ -29,7 +29,8 @@ class LaporanController extends Controller
      */
     private function buildFilterQuery(Request $request)
     {
-        $query = PengajuanBeasiswa::with(['santri', 'periode', 'lembaga1', 'lembaga2'])
+        $query = PengajuanBeasiswa::forUser()
+            ->with(['santri', 'periode', 'lembaga1', 'lembaga2'])
             ->select('pengajuan_beasiswas.*');
 
         if ($request->filled('periode_id')) {

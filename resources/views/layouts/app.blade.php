@@ -214,7 +214,7 @@
                                 </span>
                                 <span class="logo-lg">
                                     <img src="{{ asset('assets/images/p2s3.png') }}" alt="logo" height="28" class="me-1">
-                                    <span class="fw-bold text-primary" style="font-size: 18px; letter-spacing: 1px;">ZIZTREN</span>
+                                    <span class="fw-bold text-primary" style="font-size: 18px; letter-spacing: 1px;">LAZIMY</span>
                                 </span>
                             </a>
                             <a href="{{ route('dashboard') }}" class="logo logo-light">
@@ -223,7 +223,7 @@
                                 </span>
                                 <span class="logo-lg">
                                     <img src="{{ asset('assets/images/p2s3.png') }}" alt="logo" height="28" class="me-1">
-                                    <span class="fw-bold text-white" style="font-size: 18px; letter-spacing: 1px;">ZIZTREN</span>
+                                    <span class="fw-bold text-white" style="font-size: 18px; letter-spacing: 1px;">LAZIMY</span>
                                 </span>
                             </a>
                         </div>
@@ -265,11 +265,17 @@
                                     <i class="ri-history-line"></i><span>Histori Pengajuan</span>
                                 </a>
                             </li>
+                            <li class="{{ request()->routeIs('pencairan.*') ? 'mm-active' : '' }}">
+                                <a href="{{ route('pencairan.index') }}" class="waves-effect">
+                                    <i class="ri-hand-coin-line"></i><span>Pencairan Dana</span>
+                                </a>
+                            </li>
                             <li class="{{ request()->routeIs('laporan.*') ? 'mm-active' : '' }}">
                                 <a href="{{ route('laporan.index') }}" class="waves-effect">
                                     <i class="ri-file-chart-line"></i><span>Laporan & Rekap</span>
                                 </a>
                             </li>
+                            @if(Auth::user() && Auth::user()->isAdmin())
                             <li class="{{ request()->routeIs('pengguna.*', 'lembaga.*', 'master-periode.*', 'provinsi.*', 'kota.*', 'kecamatan.*', 'desa.*', 'santri.*') ? 'mm-active' : '' }}">
                                 <a href="javascript: void(0);" class="has-arrow waves-effect">
                                     <i class="ri-database-2-line"></i><span>Master</span>
@@ -285,6 +291,7 @@
                                     <li><a href="{{ route('santri.index') }}" class="{{ request()->routeIs('santri.*') ? 'active' : '' }}">Santri</a></li>
                                 </ul>
                             </li>
+                            @endif
                             <li>
                                 <a href="javascript:void(0);" onclick="event.preventDefault(); document.getElementById('logout-form').submit();" class="waves-effect text-danger">
                                     <i class="ri-shut-down-line text-danger"></i><span>Logout</span>
@@ -330,7 +337,7 @@
                     <div class="container-fluid">
                         <div class="row">
                             <div class="col-sm-6">
-                                <script>document.write(new Date().getFullYear())</script> © Ziztren.
+                                <script>document.write(new Date().getFullYear())</script> © Lazimy.
                             </div>
                         </div>
                     </div>
