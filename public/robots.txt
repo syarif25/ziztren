@@ -1,2 +1,13 @@
 User-agent: *
-Disallow:
+Allow: /
+Allow: /login
+Disallow: /dashboard
+Disallow: /beasiswa/
+Disallow: /santri
+Disallow: /pengguna
+Disallow: /lembaga
+Disallow: /laporan/
+Disallow: /pencairan/
+Disallow: /histori-status/
+
+Sitemap: https://lazimy.p2s3.com/sitemap.xml

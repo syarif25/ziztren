@@ -2,9 +2,28 @@
 <html lang="en">
     <head>
         <meta charset="utf-8" />
-        <title>Lazimy - Sistem Pendataan Beasiswa</title>
+        <title>LAZIMY - Sistem Informasi Pengajuan Beasiswa Santri P2S3</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta content="Sistem Informasi Pendataan dan Manajemen Beasiswa - Lazimy" name="description" />
+        <meta name="description" content="Sistem Informasi Pengajuan dan Pendataan Beasiswa Santri Pondok Pesantren Salafiyah Syafi'iyah Sukorejo (LAZIMY). Mempermudah proses pengajuan, verifikasi, dan pencairan beasiswa santri." />
+        <meta name="keywords" content="lazimy, beasiswa santri, p2s3 sukorejo, lazis p2s3, beasiswa sukorejo, pendataan beasiswa, salafiyah syafiiyah" />
+        <meta name="author" content="Pondok Pesantren Salafiyah Syafi'iyah Sukorejo" />
+        <meta name="robots" content="index, follow" />
+
+        <!-- Open Graph / Facebook / WhatsApp Preview -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://lazimy.p2s3.com/" />
+        <meta property="og:title" content="LAZIMY - Sistem Informasi Pengajuan Beasiswa Santri P2S3" />
+        <meta property="og:description" content="Layanan resmi pengajuan, verifikasi, dan penyaluran beasiswa santri Pondok Pesantren Salafiyah Syafi'iyah Sukorejo." />
+        <meta property="og:image" content="{{ asset('assets/images/logo-lazimy.png') }}" />
+
+        <!-- Twitter Card -->
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="LAZIMY - Sistem Informasi Pengajuan Beasiswa Santri P2S3" />
+        <meta name="twitter:description" content="Layanan resmi pengajuan, verifikasi, dan penyaluran beasiswa santri Pondok Pesantren Salafiyah Syafi'iyah Sukorejo." />
+        <meta name="twitter:image" content="{{ asset('assets/images/logo-lazimy.png') }}" />
+
+        <!-- Canonical URL -->
+        <link rel="canonical" href="https://lazimy.p2s3.com/" />
         <!-- App favicon -->
         <link rel="shortcut icon" href="{{ asset('assets/images/p2s2_fav.png') }}">
         <link rel="icon" type="image/png" href="{{ asset('assets/images/p2s2_fav.png') }}">
