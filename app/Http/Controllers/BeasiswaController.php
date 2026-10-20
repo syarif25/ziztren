@@ -533,6 +533,11 @@ class BeasiswaController extends Controller
             }
 
             DB::commit();
+
+            if ($request->input('preview_pdf') == '1') {
+                return redirect()->route('beasiswa.pdf', $pengajuan->id);
+            }
+
             return redirect()->route('beasiswa.index')->with('success', $action === 'draft' ? 'Draf Pengajuan Beasiswa berhasil disimpan.' : 'Pengajuan Beasiswa berhasil diubah.');
 
         } catch (\Exception $e) {
